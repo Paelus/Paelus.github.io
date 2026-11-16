@@ -1,2 +1,1 @@
-Object recognition
-https://drluarn.github.io/
+Object recognition - local Python + MediaPipe app built with Antigravity
