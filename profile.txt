@@ -8,6 +8,8 @@ name=Pascal Mueller
 
 title1=Student
 
+title2=Workingstudent
+
 expertise=Market Research, Marketing Intelligence, Agentic AI
 
 education=B.Sc. in Market Research and Consumer Psychology, Hochschule Pforzheim, Germany
