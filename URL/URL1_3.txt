@@ -1,2 +1,2 @@
-Teachable Machine
-https://drluarn.github.io/
+Teachable Machine - own image model (phone, ring, bottle)
+https://teachablemachine.withgoogle.com/
