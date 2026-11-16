@@ -4,11 +4,11 @@
 # Lines starting with # are comments and are ignored.
 # ============================================================
 
-name=Pascal Mueller
+name=Pascal Mueller 325712
 
 title1=Student
 
-title2=Workingstudent
+title2=curious about new Frontiers of AI
 
 expertise=Market Research, Marketing Intelligence, Agentic AI
 
