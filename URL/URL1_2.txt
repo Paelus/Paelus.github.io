@@ -1,2 +1,2 @@
-MediaPipe Tasks - Face Landmarker
+MediaPipe Tasks - Face Landmarker, Gesture Recognizer, Object Detection
 https://google-ai-edge.github.io/mediapipe-samples-web/#/home
