@@ -1,2 +1,2 @@
-Teachable Machine - own image model (phone, ring, bottle)
+Teachable Machine - own image model (phone, ring, bottle, empty)
 https://teachablemachine.withgoogle.com/
