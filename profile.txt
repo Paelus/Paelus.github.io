@@ -12,7 +12,7 @@ title2=Workingstudent
 
 expertise=Market Research, Marketing Intelligence, Agentic AI
 
-education=B.Sc. in Market Research and Consumer Psychology, Hochschule Pforzheim, Germany
+education=Master Marketing Intelligence, Hochschule Pforzheim, Germany
 
 email=muelle6p@hs-pforzheim.de
 linkedin=https://www.linkedin.com/in/pasmue/
@@ -24,4 +24,4 @@ about4=Focused on applying AI in marketing and data analytics (Python, SQL, Powe
 
 phone=/
 
-location=W1 Hochschule Pforzheim
+location=Karlsruhe, Germany
