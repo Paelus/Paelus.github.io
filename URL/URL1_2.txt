@@ -1,2 +1,2 @@
-MediaPipe Tasks
-https://drluarn.github.io/
+MediaPipe Tasks - Face Landmarker
+https://google-ai-edge.github.io/mediapipe-samples-web/#/home
