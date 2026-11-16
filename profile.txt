@@ -8,19 +8,17 @@ name=Pascal Mueller
 
 title1=Student
 
-title2=/
-
 expertise=Market Research, Marketing Intelligence, Agentic AI
 
 education=B.Sc. in Market Research and Consumer Psychology, Hochschule Pforzheim, Germany
 
 email=muelle6p@hs-pforzheim.de
-linkedin=/
+linkedin=https://www.linkedin.com/in/pasmue/
 
-about1=/
-about2=/
-about3=/
-about4=/
+about1=M.Sc. student in Marketing Intelligence at Pforzheim University, Germany,
+about2=holding a B.Sc. in Market Research & Consumer Psychology from Pforzheim University.
+about3=Working student in customer management at Stadtwerke Karlsruhe, building AI pipelines for qualitative data analysis.
+about4=Focused on applying AI in marketing and data analytics (Python, SQL, Power BI, n8n).
 
 phone=/
 
