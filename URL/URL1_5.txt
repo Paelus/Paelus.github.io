@@ -1,2 +1,1 @@
-Video object recognition
-https://drluarn.github.io/
+Video object recognition - YouTube stream in my MediaPipe app
