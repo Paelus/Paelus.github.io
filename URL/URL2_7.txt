@@ -1,2 +1,2 @@
-Extra Credit Challenge
-https://drluarn.github.io/mediapipeCC.html
+Extra Credit Challenge - Hand Particle Lab (fist: next shape, open palm: blast, distance: size)
+https://paelus.github.io/hand_particles.html

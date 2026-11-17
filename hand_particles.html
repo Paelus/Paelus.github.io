@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hand Particle Lab</title>
+<style>
+  :root {
+    --bg: #05060c;
+    --panel: rgba(14, 16, 28, 0.72);
+    --border: rgba(255, 255, 255, 0.12);
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --accent: #5ee7ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .panel { position: fixed; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+
+  #title { top: 14px; left: 14px; padding: 10px 14px; max-width: calc(100% - 28px); }
+  #title h1 { font-size: 15px; font-weight: 650; letter-spacing: 0.3px; }
+  #title p { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  #hud { left: 14px; bottom: 14px; padding: 10px 14px; min-width: 190px;
+    font-variant-numeric: tabular-nums; }
+  #clock { font-size: 26px; font-weight: 600; letter-spacing: 1px; }
+  #date { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  #stats { display: grid; grid-template-columns: auto auto; gap: 2px 14px; font-size: 12px; }
+  #stats dt { color: var(--muted); }
+  #stats dd { text-align: right; }
+
+  #cam { right: 14px; bottom: 14px; padding: 6px; }
+  #camCanvas { display: block; width: 240px; height: 180px; border-radius: 8px; background: #000; }
+  #camLabel { position: absolute; top: 10px; left: 12px; font-size: 11px; color: var(--muted); }
+
+  #loader { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    pointer-events: none; transition: opacity 0.6s; }
+  #loader .box { pointer-events: auto; text-align: center; padding: 22px 28px; max-width: 340px; }
+  .spinner { width: 34px; height: 34px; margin: 0 auto 12px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadText { font-size: 14px; }
+  #loadSub { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  #retryBtn { display: none; margin-top: 12px; padding: 8px 16px; border-radius: 8px; border: 0;
+    background: var(--accent); color: #04121a; font-weight: 600; cursor: pointer; }
+  .hidden { opacity: 0; }
+
+  @media (max-width: 640px) {
+    #camCanvas { width: 144px; height: 108px; }
+    #hud { min-width: 0; }
+    #clock { font-size: 20px; }
+    #title p { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="title" class="panel">
+  <h1>Hand Particle Lab</h1>
+  <p>✊ Fist: next shape &amp; color &nbsp;·&nbsp; ✋ Open palm: blast &nbsp;·&nbsp; ↕ Hand distance: size</p>
+</div>
+
+<div id="hud" class="panel" aria-live="polite">
+  <div id="clock">--:--:--</div>
+  <div id="date">&nbsp;</div>
+  <dl id="stats">
+    <dt>FPS</dt><dd id="sFps">0</dd>
+    <dt>Hands</dt><dd id="sHands">0</dd>
+    <dt>Gesture</dt><dd id="sGesture">–</dd>
+    <dt>Shape</dt><dd id="sShape">Heart</dd>
+    <dt>Scale</dt><dd id="sScale">1.00×</dd>
+    <dt>Particles</dt><dd id="sCount">0</dd>
+  </dl>
+</div>
+
+<div id="cam" class="panel">
+  <canvas id="camCanvas" width="320" height="240" aria-label="Mirrored webcam with hand skeleton"></canvas>
+  <span id="camLabel">camera</span>
+</div>
+
+<div id="loader">
+  <div class="box panel" style="position:static">
+    <div class="spinner" id="spinner"></div>
+    <div id="loadText">Loading MediaPipe…</div>
+    <div id="loadSub">This takes a few seconds the first time.</div>
+    <button id="retryBtn" type="button">Try camera again</button>
+  </div>
+</div>
+
+<video id="video" playsinline muted style="display:none"></video>
+
+<script type="module">
+import { FilesetResolver, HandLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const WASM_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const MODEL_URL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+
+// ---------- DOM ----------
+const stage = document.getElementById("stage");
+const ctx = stage.getContext("2d");
+const camCanvas = document.getElementById("camCanvas");
+const cctx = camCanvas.getContext("2d");
+const video = document.getElementById("video");
+const loader = document.getElementById("loader");
+const loadText = document.getElementById("loadText");
+const loadSub = document.getElementById("loadSub");
+const retryBtn = document.getElementById("retryBtn");
+const spinner = document.getElementById("spinner");
+const el = (id) => document.getElementById(id);
+
+// ---------- Shapes & palettes ----------
+const SHAPES = ["Heart", "Star", "Spiral", "Twist"];
+const PALETTES = [  // [hue from, hue to, saturation, lightness]
+  [330, 20, 95, 62],   // pink → coral
+  [190, 260, 95, 65],  // cyan → violet
+  [40, 70, 100, 60],   // amber → yellow
+  [120, 180, 85, 58],  // green → teal
+  [260, 320, 90, 66],  // violet → magenta
+];
+const BUCKETS = 10; // particles are drawn in color buckets for speed
+
+let shapeIdx = 0, paletteIdx = 0;
+let scale = 1, scaleTarget = 1;
+let blasting = false;
+let gestureLabel = "–";
+let handCount = 0;
+
+// ---------- Canvas sizing ----------
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  stage.width = W * DPR; stage.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener("resize", resize);
+resize();
+
+// ---------- Particles ----------
+const COUNT = Math.round(Math.min(3200, Math.max(1400, (W * H) / 450)));
+const px = new Float32Array(COUNT), py = new Float32Array(COUNT);
+const vx = new Float32Array(COUNT), vy = new Float32Array(COUNT);
+const rnd = new Float32Array(COUNT);       // per-particle random 0..1 (shape position)
+const jitter = new Float32Array(COUNT * 2); // small fixed offset so shapes look like dust, not lines
+const bucket = new Uint8Array(COUNT);
+for (let i = 0; i < COUNT; i++) {
+  px[i] = Math.random() * W; py[i] = Math.random() * H;
+  rnd[i] = Math.random();
+  jitter[2 * i] = (Math.random() - 0.5) * 0.05;
+  jitter[2 * i + 1] = (Math.random() - 0.5) * 0.05;
+  bucket[i] = Math.floor(Math.random() * BUCKETS);
+}
+el("sCount").textContent = COUNT.toLocaleString("en-US");
+
+// Target point for particle i in unit coordinates (about -1..1), t = time in seconds
+function target(shape, i, t) {
+  const u = rnd[i];
+  const inner = i % 4 === 0; // a quarter of the particles fill the inside
+  switch (shape) {
+    case 0: { // heart
+      const a = u * Math.PI * 2;
+      let x = 16 * Math.sin(a) ** 3 / 17;
+      let y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) / 17;
+      const k = inner ? Math.sqrt((i * 0.6180339) % 1) : 1;
+      const beat = 1 + 0.04 * Math.sin(t * 6);
+      return [x * k * beat, (y + 0.1) * k * beat];
+    }
+    case 1: { // five-point star, slowly rotating
+      const pts = 10, f = u * pts, seg = Math.floor(f), local = f - seg;
+      const r0 = seg % 2 === 0 ? 1 : 0.42, r1 = seg % 2 === 0 ? 0.42 : 1;
+      const rot = t * 0.25 - Math.PI / 2;
+      const a0 = rot + (seg / pts) * Math.PI * 2, a1 = rot + ((seg + 1) / pts) * Math.PI * 2;
+      let x = r0 * Math.cos(a0) * (1 - local) + r1 * Math.cos(a1) * local;
+      let y = r0 * Math.sin(a0) * (1 - local) + r1 * Math.sin(a1) * local;
+      const k = inner ? Math.sqrt((i * 0.6180339) % 1) : 1;
+      return [x * k, y * k];
+    }
+    case 2: { // three-armed spiral galaxy
+      const arm = i % 3, r = Math.sqrt(u);
+      const a = r * Math.PI * 3.2 + arm * (Math.PI * 2 / 3) + t * 0.6;
+      return [r * Math.cos(a), r * Math.sin(a)];
+    }
+    default: { // twist: two strands of a rotating double helix with rungs
+      const y = u * 2 - 1, phase = y * Math.PI * 2.2 + t * 1.6;
+      const strand = i % 3;
+      if (strand === 2) { // rungs between the strands
+        const s = ((i * 0.381966) % 1) * 2 - 1;
+        return [Math.sin(phase) * 0.55 * s, y];
+      }
+      const sign = strand === 0 ? 1 : -1;
+      return [Math.sin(phase) * 0.55 * sign, y];
+    }
+  }
+}
+
+// ---------- Rendering ----------
+let lastFrame = performance.now(), fps = 0;
+function render(now) {
+  const dt = Math.min(0.05, (now - lastFrame) / 1000);
+  lastFrame = now;
+  fps = fps * 0.92 + (1 / Math.max(dt, 1e-3)) * 0.08;
+  const t = now / 1000;
+
+  // Physics is tuned for 60 fps; f rescales it so slower machines look the same
+  const f = Math.min(3, dt * 60);
+  scale += (scaleTarget - scale) * Math.min(1, 0.12 * f);
+  const size = Math.min(W, H) * 0.3 * scale;
+  const cx = W / 2, cy = H / 2;
+  const damp = Math.pow(0.84, f), blastDamp = Math.pow(0.99, f);
+
+  // trail effect
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "rgba(5, 6, 12, 0.28)";
+  ctx.fillRect(0, 0, W, H);
+
+  for (let i = 0; i < COUNT; i++) {
+    if (blasting) {
+      // fling everything outward from the center, accelerating
+      let dx = px[i] - cx, dy = py[i] - cy;
+      const d = Math.hypot(dx, dy) || 1;
+      vx[i] += (dx / d) * 2.6 * f; vy[i] += (dy / d) * 2.6 * f;
+      vx[i] *= blastDamp; vy[i] *= blastDamp;
+    } else {
+      const [tx, ty] = target(shapeIdx, i, t);
+      const gx = cx + (tx + jitter[2 * i]) * size, gy = cy + (ty + jitter[2 * i + 1]) * size;
+      vx[i] += (gx - px[i]) * 0.045 * f; vy[i] += (gy - py[i]) * 0.045 * f;
+      vx[i] *= damp; vy[i] *= damp;
+    }
+    px[i] += vx[i] * f; py[i] += vy[i] * f;
+  }
+
+  // draw in color buckets with additive glow
+  ctx.globalCompositeOperation = "lighter";
+  const [h0, h1, s, l] = PALETTES[paletteIdx];
+  const dot = Math.max(1.2, 1.6 * Math.sqrt(scale));
+  for (let b = 0; b < BUCKETS; b++) {
+    let hue = h0 + ((h1 - h0 + 360) % 360) * (b / (BUCKETS - 1));
+    ctx.fillStyle = `hsla(${hue % 360}, ${s}%, ${l}%, 0.85)`;
+    ctx.beginPath();
+    for (let i = 0; i < COUNT; i++) {
+      if (bucket[i] !== b) continue;
+      const x = px[i], y = py[i];
+      if (x < -10 || y < -10 || x > W + 10 || y > H + 10) continue;
+      ctx.rect(x, y, dot, dot);
+    }
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+
+  updateHud(now);
+  requestAnimationFrame(render);
+}
+
+// ---------- HUD ----------
+let lastHud = 0;
+function updateHud(now) {
+  if (now - lastHud < 250) return;
+  lastHud = now;
+  const d = new Date();
+  el("clock").textContent = d.toLocaleTimeString("en-GB", { hour12: false });
+  el("date").textContent = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  el("sFps").textContent = Math.round(fps);
+  el("sHands").textContent = handCount;
+  el("sGesture").textContent = gestureLabel;
+  el("sShape").textContent = SHAPES[shapeIdx];
+  el("sScale").textContent = scale.toFixed(2) + "×";
+}
+
+// ---------- Gesture logic ----------
+const FINGERS = [[8, 6], [12, 10], [16, 14], [20, 18]]; // [tip, pip]
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+function classify(lm) {
+  const wrist = lm[0];
+  let curled = 0, extended = 0;
+  for (const [tip, pip] of FINGERS) {
+    const dt = dist(lm[tip], wrist), dp = dist(lm[pip], wrist);
+    if (dt < dp * 0.95) curled++;
+    else if (dt > dp * 1.2) extended++;
+  }
+  const palmSize = dist(lm[0], lm[9]);
+  const thumbOut = dist(lm[4], lm[5]) > palmSize * 0.55;
+  const thumbTucked = dist(lm[4], lm[10]) < palmSize * 0.75; // thumb folded over the fingers (not a thumbs-up)
+  if (curled === 4 && thumbTucked) return "fist";
+  if (extended === 4 && thumbOut) return "palm";
+  return "other";
+}
+
+let fistSince = 0, lastSwitch = 0, wasFist = false, switchedThisFist = false;
+function onHands(hands, now) {
+  handCount = hands.length;
+  if (!hands.length) { gestureLabel = "–"; blasting = false; wasFist = false; return; }
+  const lm = hands[0];
+  const g = classify(lm);
+  gestureLabel = g === "fist" ? "✊ Fist" : g === "palm" ? "✋ Open palm" : "Hand";
+
+  // size from apparent hand size (closer = bigger)
+  const aspect = video.videoWidth / Math.max(1, video.videoHeight);
+  const palm = Math.hypot((lm[0].x - lm[9].x) * aspect, lm[0].y - lm[9].y);
+  const k = Math.min(1, Math.max(0, (palm - 0.08) / (0.32 - 0.08)));
+  scaleTarget = 0.5 + k * 2.0;
+
+  blasting = g === "palm";
+
+  // fist: switch shape + color once per fist, after holding it briefly (avoids flicker)
+  if (g === "fist") {
+    if (!wasFist) { fistSince = now; switchedThisFist = false; }
+    if (!switchedThisFist && now - fistSince > 120 && now - lastSwitch > 700) {
+      shapeIdx = (shapeIdx + 1) % SHAPES.length;
+      paletteIdx = (paletteIdx + 1) % PALETTES.length;
+      lastSwitch = now;
+      switchedThisFist = true;
+    }
+  }
+  wasFist = g === "fist";
+}
+
+// ---------- Webcam preview with glowing skeleton ----------
+const BONES = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],
+               [9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function drawCam(hands) {
+  const w = camCanvas.width, h = camCanvas.height;
+  cctx.save();
+  cctx.translate(w, 0); cctx.scale(-1, 1); // mirror
+  if (video.readyState >= 2) cctx.drawImage(video, 0, 0, w, h);
+  cctx.restore();
+  const [h0] = PALETTES[paletteIdx];
+  cctx.lineWidth = 3; cctx.lineCap = "round";
+  cctx.shadowBlur = 12; cctx.shadowColor = `hsl(${h0}, 100%, 60%)`;
+  cctx.strokeStyle = `hsl(${h0}, 100%, 70%)`;
+  for (const lm of hands) {
+    cctx.beginPath();
+    for (const [a, b] of BONES) {
+      cctx.moveTo((1 - lm[a].x) * w, lm[a].y * h);
+      cctx.lineTo((1 - lm[b].x) * w, lm[b].y * h);
+    }
+    cctx.stroke();
+    cctx.fillStyle = "#fff";
+    for (const p of lm) { cctx.beginPath(); cctx.arc((1 - p.x) * w, p.y * h, 2.4, 0, Math.PI * 2); cctx.fill(); }
+  }
+  cctx.shadowBlur = 0;
+}
+
+// ---------- Loading & camera ----------
+function setStatus(text, sub, { error = false, done = false } = {}) {
+  loadText.textContent = text;
+  loadSub.textContent = sub || "";
+  spinner.style.display = error || done ? "none" : "block";
+  retryBtn.style.display = error ? "inline-block" : "none";
+  loader.classList.toggle("hidden", done);
+}
+
+let landmarker = null;
+async function startCamera() {
+  setStatus("Starting camera…", "Please allow camera access in your browser.");
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    el("camLabel").textContent = "";
+    setStatus("Ready", "", { done: true });
+    requestAnimationFrame(detectLoop);
+  } catch (err) {
+    el("camLabel").textContent = "no camera";
+    setStatus("Camera not available", "Particles run in demo mode. Check the camera permission, then try again. (" + err.name + ")", { error: true });
+    demoMode();
+  }
+}
+retryBtn.addEventListener("click", () => { stopDemo(); startCamera(); });
+
+let lastVideoTime = -1;
+function detectLoop(now) {
+  if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const res = landmarker.detectForVideo(video, now);
+    const hands = res.landmarks || [];
+    onHands(hands, now);
+    drawCam(hands);
+  }
+  requestAnimationFrame(detectLoop);
+}
+
+// Without a camera, cycle through shapes so the page is still alive
+let demoTimer = null;
+function demoMode() {
+  stopDemo();
+  demoTimer = setInterval(() => {
+    shapeIdx = (shapeIdx + 1) % SHAPES.length;
+    paletteIdx = (paletteIdx + 1) % PALETTES.length;
+  }, 5000);
+  cctx.fillStyle = "#000"; cctx.fillRect(0, 0, camCanvas.width, camCanvas.height);
+}
+function stopDemo() { if (demoTimer) clearInterval(demoTimer); demoTimer = null; }
+
+async function init() {
+  requestAnimationFrame(render);
+  try {
+    setStatus("Loading MediaPipe…", "This takes a few seconds the first time.");
+    const fileset = await FilesetResolver.forVisionTasks(WASM_URL);
+    setStatus("Loading hand model…", "Downloading the hand landmark model.");
+    landmarker = await HandLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: MODEL_URL, delegate: "GPU" },
+      runningMode: "VIDEO",
+      numHands: 2,
+    });
+  } catch (err) {
+    setStatus("Could not load the hand model", "Check your internet connection and reload the page. (" + (err.message || err) + ")", { error: true });
+    retryBtn.style.display = "none";
+    demoMode();
+    return;
+  }
+  startCamera();
+}
+init();
+</script>
+</body>
+</html>
