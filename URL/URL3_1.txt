@@ -1,2 +1,1 @@
-Teachable Machine Object Classifier
-https://drluarn.github.io/
+Teachable Machine real-time object classifier - my own model (phone, remote, watch, blank)
