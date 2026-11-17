@@ -1,2 +1,1 @@
-Pose landmark detection
-https://drluarn.github.io/
+Pose landmark detection - MediaPipe fitness coach counting arm curls for each arm
