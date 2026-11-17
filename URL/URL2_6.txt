@@ -1,2 +1,1 @@
-Face detection
-https://drluarn.github.io/
+Face detection - six keypoints as shapes: eyes as concentric circles, random shapes reassigned on key press
