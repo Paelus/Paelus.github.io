@@ -1,2 +1,1 @@
-Face landmark detection
-https://drluarn.github.io/
+Face landmark detection - MediaPipe Face Mesh (468 3D landmarks) on a photo and live webcam
