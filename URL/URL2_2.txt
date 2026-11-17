@@ -1,2 +1,1 @@
-Video Face landmark detection
-https://drluarn.github.io/
+Video face landmark detection - Face Mesh on an uploaded video file and a YouTube stream
