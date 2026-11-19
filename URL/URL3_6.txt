@@ -1,2 +1,2 @@
-Extra Credit Challenge
-https://drluarn.github.io/
+Extra Credit #3-7 - CCTV traffic analyzer with YOLO26n: vehicle tracking and counting, heatmap, speed estimation
+https://paelus.github.io/cctv/
