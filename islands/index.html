@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pforzheim AI Course Islands</title>
+<!--
+  Pforzheim AI Course Islands - single self-contained HTML file (Assignment 3.5)
+  Three.js is loaded from jsDelivr; everything else (3D models, music, activities) is built in this file.
+
+  HOW TO CUSTOMIZE
+  - Island names, intros, lessons and activities: edit the ISLANDS array in the script (search "ISLANDS").
+  - Colors: island colors are in ISLANDS[].color, page colors are the CSS variables in :root.
+  - Music: the notes, tempo and sound are in the MUSIC section (SCALE, BEAT_SECONDS).
+-->
+<style>
+  :root {
+    --sky-top: #7f9be0; --sky-bottom: #ffdcec;
+    --panel: rgba(255, 255, 255, 0.94); --text: #2b2d42; --muted: #5d6178; --accent: #6c63ff;
+    --ok: #2f9e6f; --warn: #c2410c; --chip: #eef0ff; --border: rgba(43, 45, 66, 0.14);
+    --font-size: 16px; --spacing: 1.55;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: "Nunito", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, sans-serif; color: var(--text);
+    font-size: var(--font-size); line-height: var(--spacing);
+    background: linear-gradient(var(--sky-top), var(--sky-bottom)); }
+  body.lowstim { --font-size: 17.5px; --spacing: 1.75; background: #e8ecf3; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* top bar */
+  #topbar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 16px; pointer-events: none; }
+  #topbar > * { pointer-events: auto; }
+  h1 { font-size: 1.35rem; font-weight: 800; margin-right: auto; background: var(--panel); padding: 6px 14px; border-radius: 999px;
+    box-shadow: 0 4px 18px rgba(80, 90, 140, 0.15); }
+  h1 small { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-left: 6px; }
+  .pill { background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px;
+    display: flex; align-items: center; gap: 8px; font-size: 0.85rem; box-shadow: 0 4px 18px rgba(80, 90, 140, 0.12); }
+  .pill button { background: none; border: 0; font-weight: 700; }
+  .pill input[type=range] { width: 90px; accent-color: var(--accent); }
+  .switch { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+  .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  /* island labels (real buttons, so Tab/Enter work) */
+  .island-label { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); z-index: 2;
+    background: var(--panel); border: 2px solid transparent; border-radius: 999px; padding: 4px 12px;
+    font-weight: 800; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 4px 14px rgba(80, 90, 140, 0.18);
+    transition: box-shadow 0.4s, border-color 0.4s; }
+  .island-label.hot { border-color: var(--accent); box-shadow: 0 0 0 6px rgba(108, 99, 255, 0.18), 0 4px 14px rgba(80, 90, 140, 0.18); }
+  body.lowstim .island-label { transition: none; }
+
+  /* hint + bottom controls */
+  #hint { position: fixed; left: 50%; bottom: 72px; transform: translateX(-50%); background: var(--panel); padding: 10px 18px;
+    border-radius: 14px; box-shadow: 0 6px 22px rgba(80, 90, 140, 0.18); font-weight: 700; text-align: center; max-width: calc(100% - 32px); }
+  #bottombar { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; font-weight: 700;
+    box-shadow: 0 4px 14px rgba(80, 90, 140, 0.12); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* island panel */
+  #panel { position: fixed; top: 76px; right: 16px; bottom: 16px; width: min(420px, calc(100% - 32px)); z-index: 5;
+    background: var(--panel); border-radius: 20px; box-shadow: 0 12px 40px rgba(60, 70, 120, 0.22); display: flex; flex-direction: column; }
+  #panel header { display: flex; align-items: flex-start; gap: 10px; padding: 18px 18px 8px; }
+  #panel header h2 { font-size: 1.25rem; font-weight: 800; flex: 1; }
+  #panel header .unit { display: block; font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+  #panel .body { overflow: auto; padding: 4px 18px 18px; }
+  #panel h3 { font-size: 0.95rem; margin: 14px 0 6px; }
+  #panel ol { padding-left: 20px; }
+  #panel li { margin: 4px 0; }
+  #panel li span { display: block; color: var(--muted); font-size: 0.88em; }
+  .close { background: var(--chip); border: 0; border-radius: 10px; width: 34px; height: 34px; font-weight: 800; }
+  @media (max-width: 760px) {
+    #panel { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; height: 56vh; }
+    h1 { font-size: 1.05rem; }
+  }
+
+  /* activities */
+  .activity { background: var(--chip); border-radius: 14px; padding: 12px; margin-top: 8px; }
+  .activity p { font-size: 0.92em; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .opt { background: #fff; border: 2px solid var(--border); border-radius: 10px; padding: 6px 10px; font-weight: 700; font-size: 0.9em; }
+  .opt.sel { border-color: var(--accent); }
+  .opt.good { border-color: var(--ok); color: var(--ok); }
+  .opt.done { opacity: 0.55; }
+  .feedback { min-height: 1.4em; font-weight: 700; font-size: 0.92em; }
+  .feedback.good { color: var(--ok); } .feedback.try { color: var(--warn); }
+  .activity textarea, .activity select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #fff; margin-top: 6px; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+  .card { background: #fff; border: 2px solid var(--border); border-radius: 12px; padding: 10px 6px; min-height: 64px; font-weight: 800; font-size: 0.85em; }
+  .card.flipped { border-color: var(--accent); background: #f3f1ff; font-weight: 600; }
+  label.check { display: flex; gap: 8px; align-items: center; margin: 4px 0; font-size: 0.92em; }
+
+  /* text-only list */
+  #skipMenu { position: fixed; inset: 76px 16px auto 16px; z-index: 6; max-width: 520px; background: var(--panel); border-radius: 18px;
+    padding: 16px; box-shadow: 0 12px 40px rgba(60, 70, 120, 0.22); }
+  #skipMenu ul { list-style: none; margin-top: 8px; }
+  #skipMenu li button { width: 100%; text-align: left; background: var(--chip); border: 0; border-radius: 10px; padding: 10px 12px; margin: 4px 0; font-weight: 700; }
+
+  #fallback { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+  #fallback div { background: var(--panel); padding: 20px 24px; border-radius: 18px; max-width: 460px; }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="3D view of six course islands" role="img"></canvas>
+
+<div id="topbar">
+  <h1>Pforzheim AI Course Islands<small>by Prof Luarn</small></h1>
+  <div class="pill" role="group" aria-label="Background music">
+    <button id="musicBtn" type="button" aria-pressed="false" aria-label="Turn music on">♪ Music: off</button>
+    <input id="volume" type="range" min="0" max="1" step="0.05" value="0.4" aria-label="Music volume">
+  </div>
+  <div class="pill">
+    <label class="switch"><input id="lowstim" type="checkbox"> Low-stimulation mode</label>
+  </div>
+</div>
+
+<div id="labels"></div>
+
+<div id="hint" role="status">Drag to rotate, scroll to zoom, click an island to explore.</div>
+
+<div id="bottombar">
+  <button class="btn" id="skipBtn" type="button" aria-haspopup="dialog">Skip 3D view</button>
+  <button class="btn primary" id="backBtn" type="button" hidden>← Back to overview</button>
+</div>
+
+<section id="panel" role="dialog" aria-modal="false" aria-labelledby="panelTitle" hidden>
+  <header>
+    <h2 id="panelTitle"><span class="unit" id="panelUnit"></span><span id="panelName"></span></h2>
+    <button class="close" id="closeBtn" type="button" aria-label="Close panel and go back to overview">✕</button>
+  </header>
+  <div class="body" id="panelBody"></div>
+</section>
+
+<section id="skipMenu" role="dialog" aria-labelledby="skipTitle" hidden>
+  <h2 id="skipTitle" style="font-size:1.1rem">All islands (text view)</h2>
+  <ul id="skipList"></ul>
+  <button class="btn" id="skipClose" type="button" style="margin-top:8px">Close</button>
+</section>
+
+<div id="fallback" hidden><div>
+  <h2 style="margin-bottom:8px">3D view not available</h2>
+  <p>Your browser or device does not support WebGL, so the 3D islands cannot be shown. You can still explore every island with the text view.</p>
+  <button class="btn primary" id="fallbackList" type="button" style="margin-top:12px">Open text view</button>
+</div></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// =====================================================================
+// ISLANDS - course content (lesson titles exactly as given)
+// =====================================================================
+const ISLANDS = [
+  { id: "A", unit: "Unit 1", name: "Getting Started with Perceptual AI", color: "#8fd3b6", landmark: "camera",
+    intro: "Your first steps: set up a personal web page and meet perceptual AI. You will see how computers can recognize faces, hands and objects, and even train a small model yourself.",
+    lessons: [
+      ["1.1 Build your own personal web page and course introduction", "Create a simple site on GitHub Pages to show your work."],
+      ["1.2 Introduction to Google MediaPipe Tasks (perceptual AI)", "Try ready-made AI that detects faces, hands and objects."],
+      ["1.3 Train your own recognition model with Teachable Machine", "Teach a model your own objects using webcam pictures."],
+      ["1.4 Image object recognition with Google Antigravity", "Let an AI coding agent build an app that finds objects in photos."],
+      ["1.5 Video object recognition with Google Antigravity", "Extend that app so it works on videos too."]],
+    activity: "match" },
+  { id: "B", unit: "Unit 2", name: "MediaPipe Vision Tasks", color: "#ffc4a3", landmark: "face",
+    intro: "A closer look at MediaPipe's vision tasks. Each task answers a different question about an image: where is the face, how is the body posed, which gesture is shown?",
+    lessons: [
+      ["2.1 MediaPipe Face Landmark Detection", "Find many points on a face, like eyes, nose and lips."],
+      ["2.2 MediaPipe Video Face Landmark Detection", "Do the same frame by frame in a video."],
+      ["2.3 MediaPipe Pose Landmark Detection", "Track body joints such as shoulders, elbows and knees."],
+      ["2.4 MediaPipe Gesture Recognition", "Recognize hand gestures like a thumbs-up."],
+      ["2.5 MediaPipe Image Segmentation", "Separate a person from the background, pixel by pixel."],
+      ["2.6 MediaPipe Face Detection", "Find where faces are in an image."]],
+    activity: "which" },
+  { id: "C", unit: "Unit 3", name: "Real-Time Models and Creative AI", color: "#b8c4ff", landmark: "chip",
+    intro: "Models that run live and models that create. You will connect your own trained model, detect objects in real time, turn photos into art and talk to a language model.",
+    lessons: [
+      ["3.1 Teachable Machine Real-Time Object Classifier", "Use your own trained model live on the webcam."],
+      ["3.2 YOLO", "A fast detector that finds many objects in one look."],
+      ["3.3 Neural Style Transfer", "Repaint a photo in the style of an artwork."],
+      ["3.4 Simple Chat App Built with a Gemini API Key", "Build a small chat window that talks to an AI model."],
+      ["3.5 Island Builder", "Design an interactive page like this one with an AI assistant."]],
+    activity: "order" },
+  { id: "D", unit: "Unit 4", name: "Gemini and Multimodal Workflows", color: "#ffe08a", landmark: "easel",
+    intro: "AI that works with text, images and more at the same time. You will run a model on your own computer and combine Gemini's tools into small helpers.",
+    lessons: [
+      ["4.1 Use a multimodal model to let Ollama recognize images", "Run a local model that can describe pictures."],
+      ["4.2 Gemini", "Get to know Google's AI assistant."],
+      ["4.3 Gemini Notebook", "Collect sources and let AI summarize and explain them."],
+      ["4.4 Gemini Canvas", "Write, edit and create together with AI on one canvas."],
+      ["4.5 Gemini Skills-1", "Teach Gemini a reusable task."],
+      ["4.6 Gemini Skills-2", "Build a second skill for another task."],
+      ["4.7 Gemini Skills-3", "Combine skills into a bigger workflow."]],
+    activity: "helper" },
+  { id: "E", unit: "Unit 5", name: "AI Agents", color: "#f4b6d8", landmark: "robot",
+    intro: "From answering to acting. Agents plan steps, use tools and finish tasks for you. You will compare several agent tools and build simple automations.",
+    lessons: [
+      ["5.1 n8n", "Connect apps into automated workflows."],
+      ["5.2 ChatGPT multi-agent", "Let several AI helpers work on one task."],
+      ["5.3 ChatGPT Skills", "Give ChatGPT reusable abilities."],
+      ["5.4 ChatGPT Plugins - canva", "Use an outside tool from inside a chat."],
+      ["5.5 ChatGPT Sites", "Create a small website with AI help."],
+      ["5.6 Claude Skills", "Give Claude reusable abilities."],
+      ["5.7 OpenClaw", "Explore this agent tool in class."],
+      ["5.8 Hermes Agent", "Explore this agent tool in class."]],
+    activity: "agent" },
+  { id: "F", unit: "Unit 6", name: "The Next Wave of AI Tools", color: "#a8e6f0", landmark: "rocket",
+    intro: "A look at brand-new AI tools. We try them together in class and compare what they might be good for.",
+    lessons: [
+      ["6.1 Meta Muse", "Explore in class."],
+      ["6.2 Manus Cue!", "Explore in class."],
+      ["6.3 Hark Pro", "Explore in class."],
+      ["6.4 OpenAI Dots", "Explore in class."],
+      ["6.5 Grok Bot", "Explore in class."],
+      ["6.6 Claude Duet", "Explore in class."]],
+    activity: "explorer" },
+];
+
+// =====================================================================
+// Settings: low-stimulation mode (also follows the OS "reduce motion" setting)
+// =====================================================================
+const store = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (_) {} },
+};
+const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lowStim = store.get("lowstim") !== null ? store.get("lowstim") === "1" : prefersReduced;
+const $ = (id) => document.getElementById(id);
+
+// =====================================================================
+// 3D SCENE
+// =====================================================================
+const canvas = $("scene");
+let renderer;
+try {
+  // transparent canvas so the soft CSS sky gradient shows behind the islands
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
+  if (!renderer.getContext()) throw new Error("no context");
+} catch (err) {
+  $("fallback").hidden = false;
+  canvas.hidden = true; $("labels").hidden = true; $("hint").hidden = true;
+}
+
+const islands = []; // { data, group, top, label, baseY, phase }
+let scene, camera, controls, stars, clouds = [];
+if (renderer) buildScene();
+
+function buildScene() {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75)); // cap the pixel ratio for performance
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+  camera.position.set(0, 13, 27);
+  controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.07;
+  controls.minDistance = 9; controls.maxDistance = 70;
+  controls.maxPolarAngle = Math.PI * 0.48; controls.enablePan = false;
+  controls.target.set(0, 1, 0);
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9c8ff, 1.15));
+  const sun = new THREE.DirectionalLight(0xfff3e0, 1.1); sun.position.set(8, 20, 10); scene.add(sun);
+
+  // soft "space" backdrop: slow stars and drifting clouds
+  const sg = new THREE.BufferGeometry(), pts = [];
+  for (let i = 0; i < 500; i++) {
+    const r = 120 + Math.random() * 60, t = Math.random() * Math.PI * 2, p = Math.acos(Math.random() * 1.6 - 0.6);
+    pts.push(r * Math.sin(p) * Math.cos(t), r * Math.cos(p), r * Math.sin(p) * Math.sin(t));
+  }
+  sg.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+  stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.9, transparent: true, opacity: 0.75 }));
+  scene.add(stars);
+  const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+  for (let i = 0; i < 7; i++) {
+    const c = new THREE.Group();
+    for (let k = 0; k < 4; k++) {
+      const s = new THREE.Mesh(new THREE.SphereGeometry(1 + Math.random() * 0.8, 16, 12), cloudMat);
+      s.position.set(k * 1.3 - 2, Math.random() * 0.5, Math.random() * 0.8); c.add(s);
+    }
+    const a = (i / 7) * Math.PI * 2;
+    c.position.set(Math.cos(a) * 30, 7 + Math.random() * 6, Math.sin(a) * 30);
+    c.userData.speed = 0.01 + Math.random() * 0.01; c.userData.angle = a;
+    clouds.push(c); scene.add(c);
+  }
+
+  // six islands in a gentle ring
+  ISLANDS.forEach((d, i) => {
+    const a = (i / ISLANDS.length) * Math.PI * 2 - Math.PI / 2;
+    const g = new THREE.Group();
+    g.position.set(Math.cos(a) * 10, (i % 2) * 1.2, Math.sin(a) * 10);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.2, 0.6, 40), mat(d.color));
+    const rock = new THREE.Mesh(new THREE.SphereGeometry(2.2, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat("#d8c3b0"));
+    rock.scale.y = 1.2; rock.position.y = -0.3;
+    g.add(top, rock);
+    const lm = landmark(d.landmark); lm.position.y = 0.3; g.add(lm);
+    // soft fake shadow disc instead of real shadows (cheaper)
+    const sh = new THREE.Mesh(new THREE.CircleGeometry(2.2, 32), new THREE.MeshBasicMaterial({ color: 0x5b5f97, transparent: true, opacity: 0.12 }));
+    sh.rotation.x = -Math.PI / 2; sh.position.y = -4.5; g.add(sh);
+    g.userData.index = i;
+    scene.add(g);
+    islands.push({ data: d, group: g, baseY: g.position.y, phase: i * 1.3, meshes: collectMeshes(g) });
+  });
+  applyLowStim();
+}
+
+function mat(hex) {
+  return new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.75, metalness: 0.0, emissive: 0x000000 });
+}
+// meshes that can glow and be clicked (the flat shadow disc has no emissive color and is skipped)
+function collectMeshes(g) { const m = []; g.traverse((o) => o.isMesh && o.material.emissive && m.push(o)); return m; }
+
+// Small low-poly landmarks hinting at each island's theme
+function landmark(kind) {
+  const g = new THREE.Group();
+  const add = (geo, color, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat(color)); m.position.set(x, y, z); g.add(m); return m; };
+  if (kind === "camera") {          // tiny camera tower
+    add(new THREE.CylinderGeometry(0.25, 0.35, 2, 12), "#ffffff", 0, 1, 0);
+    add(new THREE.BoxGeometry(1.2, 0.8, 0.8), "#4a4e69", 0, 2.3, 0);
+    add(new THREE.CylinderGeometry(0.28, 0.28, 0.4, 16), "#9ad1ff", 0, 2.3, 0.55).rotation.x = Math.PI / 2;
+  } else if (kind === "face") {     // face-shaped hill
+    add(new THREE.SphereGeometry(1.3, 24, 16), "#ffd7c2", 0, 1.1, 0);
+    add(new THREE.SphereGeometry(0.16, 12, 8), "#3d405b", -0.42, 1.45, 1.2);
+    add(new THREE.SphereGeometry(0.16, 12, 8), "#3d405b", 0.42, 1.45, 1.2);
+    const smile = add(new THREE.TorusGeometry(0.42, 0.07, 8, 20, Math.PI), "#e07a5f", 0, 0.95, 1.22); smile.rotation.z = Math.PI;
+  } else if (kind === "chip") {     // AI chip with pins (input -> model -> output)
+    add(new THREE.BoxGeometry(1.8, 0.4, 1.8), "#5f6caf", 0, 0.5, 0);
+    add(new THREE.BoxGeometry(0.9, 0.2, 0.9), "#ffffff", 0, 0.8, 0);
+    for (let k = -2; k <= 2; k++) { add(new THREE.BoxGeometry(0.12, 0.1, 0.45), "#c9ccd5", k * 0.33, 0.35, 1.1); add(new THREE.BoxGeometry(0.12, 0.1, 0.45), "#c9ccd5", k * 0.33, 0.35, -1.1); }
+  } else if (kind === "easel") {    // canvas on an easel with paint dots
+    add(new THREE.BoxGeometry(1.6, 1.2, 0.12), "#fffaf0", 0, 1.6, 0);
+    add(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), "#b08968", -0.5, 1, -0.2);
+    add(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), "#b08968", 0.5, 1, -0.2);
+    ["#ff6b6b", "#4ecdc4", "#ffd93d"].forEach((c, k) => add(new THREE.SphereGeometry(0.15, 10, 8), c, -0.4 + k * 0.4, 1.7, 0.1));
+  } else if (kind === "robot") {    // robot hut
+    add(new THREE.BoxGeometry(1.3, 1.2, 1.1), "#e0e1dd", 0, 0.9, 0);
+    add(new THREE.BoxGeometry(0.9, 0.7, 0.8), "#ffffff", 0, 1.9, 0);
+    add(new THREE.SphereGeometry(0.11, 10, 8), "#6c63ff", -0.2, 1.95, 0.42);
+    add(new THREE.SphereGeometry(0.11, 10, 8), "#6c63ff", 0.2, 1.95, 0.42);
+    add(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), "#8d99ae", 0, 2.5, 0);
+    add(new THREE.SphereGeometry(0.12, 10, 8), "#ff6b6b", 0, 2.8, 0);
+  } else {                          // rocket = next wave
+    add(new THREE.CylinderGeometry(0.45, 0.45, 1.8, 20), "#ffffff", 0, 1.2, 0);
+    add(new THREE.ConeGeometry(0.45, 0.8, 20), "#ff6b6b", 0, 2.5, 0);
+    add(new THREE.SphereGeometry(0.18, 12, 8), "#9ad1ff", 0, 1.5, 0.42);
+    for (let k = 0; k < 3; k++) { const f = add(new THREE.BoxGeometry(0.08, 0.5, 0.5), "#ff9f1c", 0, 0.45, 0); f.rotation.y = (k / 3) * Math.PI * 2; f.translateZ(0.45); }
+  }
+  return g;
+}
+
+// =====================================================================
+// LABELS (HTML buttons following the islands -> keyboard accessible)
+// =====================================================================
+let hovered = -1, focusedIdx = -1, openIdx = -1;
+ISLANDS.forEach((d, i) => {
+  const b = document.createElement("button");
+  b.className = "island-label"; b.type = "button";
+  b.textContent = `Island ${d.id}`;
+  b.setAttribute("aria-label", `Island ${d.id}, ${d.unit}: ${d.name}. Press Enter to open.`);
+  b.addEventListener("click", () => openIsland(i));
+  b.addEventListener("focus", () => { focusedIdx = i; });
+  b.addEventListener("blur", () => { if (focusedIdx === i) focusedIdx = -1; });
+  b.addEventListener("mouseenter", () => { hovered = i; });
+  b.addEventListener("mouseleave", () => { if (hovered === i) hovered = -1; });
+  $("labels").appendChild(b);
+});
+const labelEls = [...document.querySelectorAll(".island-label")];
+
+// =====================================================================
+// INTERACTION: hover, click, fly-to camera
+// =====================================================================
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let downAt = null;
+if (renderer) {
+  canvas.addEventListener("pointermove", (e) => {
+    mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    hovered = pick();
+    canvas.style.cursor = hovered >= 0 ? "pointer" : "grab";
+  });
+  canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; hideHint(); });
+  canvas.addEventListener("pointerup", (e) => {
+    if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return; // was a drag
+    mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    const i = pick();
+    if (i >= 0) openIsland(i);
+  });
+  canvas.addEventListener("wheel", hideHint, { passive: true });
+}
+function pick() {
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(islands.flatMap((s) => s.meshes), false)[0];
+  if (!hit) return -1;
+  let o = hit.object; while (o && o.userData.index === undefined) o = o.parent;
+  return o ? o.userData.index : -1;
+}
+
+let fly = null; // {fromPos, toPos, fromTarget, toTarget, t0, dur}
+const OVERVIEW = { pos: new THREE.Vector3(0, 13, 27), target: new THREE.Vector3(0, 1, 0) };
+// portrait screens (phones) need the camera farther away so the whole ring of islands fits
+const zoomFactor = () => Math.max(1, 1.25 / (innerWidth / innerHeight));
+function overviewPos() { return OVERVIEW.pos.clone().multiplyScalar(zoomFactor()); }
+function flyTo(pos, target) {
+  if (!camera) return;
+  if (lowStim) { camera.position.copy(pos); controls.target.copy(target); fly = null; return; }
+  fly = { fromPos: camera.position.clone(), toPos: pos.clone(), fromTarget: controls.target.clone(), toTarget: target.clone(), t0: performance.now(), dur: 1400 };
+}
+function openIsland(i) {
+  openIdx = i; hideHint();
+  $("skipMenu").hidden = true;
+  if (islands[i]) {
+    const p = islands[i].group.position;
+    const dir = new THREE.Vector3(p.x, 0, p.z).normalize();
+    const k = Math.min(zoomFactor(), 1.8);
+    flyTo(new THREE.Vector3(p.x + dir.x * 13 * k, p.y + 6.5 * k, p.z + dir.z * 13 * k), new THREE.Vector3(p.x, p.y + 1, p.z));
+  }
+  renderPanel(i);
+  $("panel").hidden = false; $("backBtn").hidden = false;
+  updateViewOffset();
+  $("closeBtn").focus();
+}
+function closeIsland() {
+  if (openIdx < 0) return;
+  const last = openIdx;
+  openIdx = -1;
+  $("panel").hidden = true; $("backBtn").hidden = true;
+  updateViewOffset();
+  flyTo(overviewPos(), OVERVIEW.target);
+  (labelEls[last] && !labelEls[last].hidden ? labelEls[last] : $("skipBtn")).focus();
+}
+$("closeBtn").addEventListener("click", closeIsland);
+$("backBtn").addEventListener("click", closeIsland);
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (!$("skipMenu").hidden) { $("skipMenu").hidden = true; $("skipBtn").focus(); }
+  else closeIsland();
+});
+
+// keep the opened island visible next to the panel (shift the 3D view, not the island)
+function updateViewOffset() {
+  if (!camera) return;
+  const w = innerWidth, h = innerHeight;
+  if (openIdx >= 0) {
+    if (w > 760) camera.setViewOffset(w, h, Math.min(220, w * 0.22), 0, w, h);
+    else camera.setViewOffset(w, h, 0, h * 0.22, w, h);
+  } else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+}
+
+// =====================================================================
+// PANEL + ACTIVITIES
+// =====================================================================
+function renderPanel(i) {
+  const d = ISLANDS[i];
+  $("panelUnit").textContent = `Island ${d.id} · ${d.unit}`;
+  $("panelName").textContent = d.name;
+  const body = $("panelBody");
+  body.innerHTML = "";
+  const intro = document.createElement("p"); intro.textContent = d.intro; body.appendChild(intro);
+  const h = document.createElement("h3"); h.textContent = "Lessons"; body.appendChild(h);
+  const ol = document.createElement("ol"); ol.style.listStyle = "none"; ol.style.paddingLeft = "0";
+  d.lessons.forEach(([t, s]) => { const li = document.createElement("li"); li.textContent = t; const sp = document.createElement("span"); sp.textContent = s; li.appendChild(sp); ol.appendChild(li); });
+  body.appendChild(ol);
+  const h2 = document.createElement("h3"); h2.textContent = "Activity"; body.appendChild(h2);
+  const box = document.createElement("div"); box.className = "activity"; body.appendChild(box);
+  ACTIVITIES[d.activity](box);
+}
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.forEach((k) => e.append(k)); return e; };
+const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+
+const ACTIVITIES = {
+  // A: match the tool to the task
+  match(box) {
+    const pairs = [["MediaPipe", "Find hands and faces live"], ["Teachable Machine", "Train a model with your own photos"],
+      ["Antigravity", "Let an AI agent write an app"], ["GitHub Pages", "Publish your personal website"]];
+    box.append(el("p", { textContent: "Click a tool, then the task it fits." }));
+    const tools = el("div", { className: "opts" }), tasks = el("div", { className: "opts" }), fb = el("p", { className: "feedback", role: "status" });
+    let picked = null, done = 0;
+    pairs.forEach(([tool]) => {
+      const b = el("button", { className: "opt", type: "button", textContent: tool });
+      b.onclick = () => { if (b.classList.contains("done")) return; tools.querySelectorAll(".opt").forEach((x) => x.classList.remove("sel")); b.classList.add("sel"); picked = tool; };
+      tools.append(b);
+    });
+    shuffle(pairs).forEach(([tool, task]) => {
+      const b = el("button", { className: "opt", type: "button", textContent: task });
+      b.onclick = () => {
+        if (!picked || b.classList.contains("done")) { fb.textContent = "Pick a tool first."; fb.className = "feedback try"; return; }
+        if (picked === tool) {
+          b.classList.add("good", "done"); tools.querySelector(".sel").classList.add("good", "done");
+          tools.querySelector(".sel").classList.remove("sel"); picked = null; done++;
+          fb.textContent = done === pairs.length ? "All matched – great job!" : "Nice match!"; fb.className = "feedback good";
+        } else { fb.textContent = "Not quite – try another task."; fb.className = "feedback try"; }
+      };
+      tasks.append(b);
+    });
+    box.append(el("strong", { textContent: "Tools" }), tools, el("strong", { textContent: "Tasks" }), tasks, fb);
+  },
+  // B: which task would you use?
+  which(box) {
+    const qs = [["You want to count arm curls in a fitness app.", "Pose Landmark Detection"],
+      ["You want to blur the background in a video call.", "Image Segmentation"],
+      ["A thumbs-up should 'like' a photo.", "Gesture Recognition"],
+      ["You only need to know where faces are in a group photo.", "Face Detection"]];
+    const opts = ["Pose Landmark Detection", "Image Segmentation", "Gesture Recognition", "Face Detection", "Face Landmark Detection"];
+    let n = 0;
+    const q = el("p"), row = el("div", { className: "opts" }), fb = el("p", { className: "feedback", role: "status" });
+    const next = el("button", { className: "opt", type: "button", textContent: "Next scenario →" });
+    function show() {
+      q.textContent = `Scenario ${n + 1}/${qs.length}: ${qs[n][0]}`; row.innerHTML = ""; fb.textContent = "";
+      opts.forEach((o) => {
+        const b = el("button", { className: "opt", type: "button", textContent: o });
+        b.onclick = () => {
+          if (o === qs[n][1]) { b.classList.add("good"); fb.textContent = "Yes! That task fits perfectly."; fb.className = "feedback good"; }
+          else { fb.textContent = "Good thought – but another task fits better. Try again!"; fb.className = "feedback try"; }
+        };
+        row.append(b);
+      });
+    }
+    next.onclick = () => { n = (n + 1) % qs.length; show(); };
+    show();
+    box.append(q, row, fb, next);
+  },
+  // C: put the pipeline steps in order
+  order(box) {
+    const steps = ["Input: camera image", "Model: YOLO looks at the image", "Output: boxes with labels"];
+    box.append(el("p", { textContent: "Click the steps of a detection pipeline in the right order." }));
+    const row = el("div", { className: "opts" }), got = el("ol", { style: "padding-left:20px;margin:6px 0" }), fb = el("p", { className: "feedback", role: "status" });
+    let k = 0;
+    const reset = el("button", { className: "opt", type: "button", textContent: "Start over" });
+    function build() {
+      row.innerHTML = ""; got.innerHTML = ""; k = 0; fb.textContent = "";
+      shuffle(steps).forEach((s) => {
+        const b = el("button", { className: "opt", type: "button", textContent: s });
+        b.onclick = () => {
+          if (b.classList.contains("done")) return;
+          if (s === steps[k]) {
+            b.classList.add("good", "done"); got.append(el("li", { textContent: s })); k++;
+            fb.textContent = k === steps.length ? "Perfect order: input → model → output!" : "Right!"; fb.className = "feedback good";
+          } else { fb.textContent = "Hmm, what has to happen before that?"; fb.className = "feedback try"; }
+        };
+        row.append(b);
+      });
+    }
+    reset.onclick = build; build();
+    box.append(row, got, fb, reset);
+  },
+  // D: design your own helper
+  helper(box) {
+    box.append(el("p", { textContent: "Pick a goal and the Gemini features you would combine." }));
+    const goal = el("select", { "aria-label": "Your goal" });
+    ["Prepare for an exam", "Plan a marketing campaign", "Write a weekly report", "Learn from a YouTube channel"].forEach((g) => goal.append(el("option", { textContent: g })));
+    const feats = ["Notebook", "Canvas", "Skills", "Connectors", "Scheduled Tasks"];
+    const checks = feats.map((f) => { const c = el("input", { type: "checkbox", value: f }); return [c, el("label", { className: "check" }, c, f)]; });
+    const out = el("p", { className: "feedback good", role: "status" });
+    const btn = el("button", { className: "opt", type: "button", textContent: "Build my helper" });
+    btn.onclick = () => {
+      const picked = checks.filter(([c]) => c.checked).map(([c]) => c.value);
+      out.className = picked.length ? "feedback good" : "feedback try";
+      out.textContent = picked.length
+        ? `Your helper for "${goal.value}" combines ${picked.join(", ")}. Nice – try building it in Unit 4!`
+        : "Tick at least one feature.";
+    };
+    box.append(goal, ...checks.map((x) => x[1]), btn, out);
+  },
+  // E: agent or chatbot?
+  agent(box) {
+    const cards = [["Answers a question about a recipe", "Chatbot"], ["Books a table and adds it to your calendar", "Agent"],
+      ["Explains what an API is", "Chatbot"], ["Checks your inbox every morning and drafts replies", "Agent"],
+      ["Translates one sentence", "Chatbot"], ["Researches 5 websites and builds a comparison table", "Agent"]];
+    let n = 0, score = 0;
+    const card = el("p", { style: "font-weight:700" }), row = el("div", { className: "opts" }), fb = el("p", { className: "feedback", role: "status" });
+    function show() {
+      if (n >= cards.length) { card.textContent = `Done! ${score}/${cards.length} sorted correctly.`; row.innerHTML = ""; return; }
+      card.textContent = `"${cards[n][0]}"`; row.innerHTML = "";
+      ["Agent", "Chatbot"].forEach((a) => {
+        const b = el("button", { className: "opt", type: "button", textContent: a });
+        b.onclick = () => {
+          const ok = a === cards[n][1]; if (ok) score++;
+          fb.textContent = ok ? "Correct!" : `This one is more of a ${cards[n][1].toLowerCase()}.`; fb.className = ok ? "feedback good" : "feedback try";
+          n++; show();
+        };
+        row.append(b);
+      });
+    }
+    show();
+    const ta = el("textarea", { rows: 2, placeholder: "What task would you hand to an agent?", "aria-label": "Reflection: what task would you hand to an agent?" });
+    box.append(el("p", { textContent: "Sort each card: is it an agent or a chatbot?" }), card, row, fb, el("strong", { textContent: "Reflection" }), ta);
+  },
+  // F: tool explorer card flip
+  explorer(box) {
+    const tools = ["Meta Muse", "Manus Cue!", "Hark Pro", "OpenAI Dots", "Grok Bot", "Claude Duet"];
+    box.append(el("p", { textContent: "Flip two tools you want to compare." }));
+    const grid = el("div", { className: "cards" }), out = el("p", { className: "feedback", role: "status" });
+    const ta = el("textarea", { rows: 2, placeholder: "Which one would you try first, and why? (one sentence)", "aria-label": "One sentence on what you would try first" });
+    const picked = [];
+    tools.forEach((t) => {
+      const c = el("button", { className: "card", type: "button", textContent: t, "aria-pressed": "false" });
+      c.onclick = () => {
+        if (c.classList.contains("flipped")) return;
+        if (picked.length === 2) { const old = picked.shift(); old.classList.remove("flipped"); old.textContent = old.dataset.name; old.setAttribute("aria-pressed", "false"); }
+        c.dataset.name = t; c.classList.add("flipped"); c.textContent = `${t}: explore in class`; c.setAttribute("aria-pressed", "true"); picked.push(c);
+        out.textContent = picked.length === 2 ? `Comparing ${picked.map((p) => p.dataset.name).join(" and ")}.` : "Pick one more."; out.className = "feedback good";
+      };
+      grid.append(c);
+    });
+    box.append(grid, out, ta);
+  },
+};
+
+// text-only list ("Skip 3D view")
+ISLANDS.forEach((d, i) => {
+  const b = el("button", { type: "button", textContent: `Island ${d.id} – ${d.unit}: ${d.name}` });
+  b.onclick = () => openIsland(i);
+  $("skipList").append(el("li", {}, b));
+});
+$("skipBtn").addEventListener("click", () => { $("skipMenu").hidden = false; $("skipList").querySelector("button").focus(); });
+$("skipClose").addEventListener("click", () => { $("skipMenu").hidden = true; $("skipBtn").focus(); });
+$("fallbackList").addEventListener("click", () => { $("skipMenu").hidden = false; $("skipList").querySelector("button").focus(); });
+
+// first-load hint
+let hintTimer = setTimeout(hideHint, 9000);
+function hideHint() { $("hint").hidden = true; clearTimeout(hintTimer); }
+
+// =====================================================================
+// MUSIC (generated with the Web Audio API, off until the user turns it on)
+// =====================================================================
+const SCALE = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33]; // C major pentatonic (+octave)
+const BEAT_SECONDS = 1.6;
+let audio = null, master = null, musicOn = false, musicTimer = null;
+function initAudio() {
+  audio = new (window.AudioContext || window.webkitAudioContext)();
+  master = audio.createGain(); master.gain.value = +$("volume").value * 0.5;
+  const delay = audio.createDelay(); delay.delayTime.value = 0.45;
+  const fbk = audio.createGain(); fbk.gain.value = 0.35;
+  delay.connect(fbk).connect(delay); delay.connect(master);
+  master.connect(audio.destination);
+  master.userData = { delay };
+}
+function note(freq, start, len, vol, type = "sine") {
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(0, start); g.gain.linearRampToValueAtTime(vol, start + len * 0.3); g.gain.linearRampToValueAtTime(0, start + len);
+  o.connect(g); g.connect(master); g.connect(master.userData.delay);
+  o.start(start); o.stop(start + len + 0.05);
+}
+function scheduleBar() {
+  const t = audio.currentTime + 0.05;
+  const root = SCALE[[0, 3, 4, 2][Math.floor(Math.random() * 4)]] / 2;
+  note(root, t, BEAT_SECONDS * 4, 0.08, "triangle"); note(root * 1.5, t, BEAT_SECONDS * 4, 0.05); // soft pad
+  for (let b = 0; b < 4; b++) if (Math.random() < 0.7) note(SCALE[Math.floor(Math.random() * SCALE.length)], t + b * BEAT_SECONDS, BEAT_SECONDS * 1.4, 0.06);
+}
+function setMusic(on) {
+  musicOn = on && !lowStim;
+  $("musicBtn").textContent = musicOn ? "♪ Music: on" : "♪ Music: off";
+  $("musicBtn").setAttribute("aria-pressed", String(musicOn));
+  $("musicBtn").setAttribute("aria-label", musicOn ? "Turn music off" : "Turn music on");
+  store.set("music", musicOn ? "1" : "0");
+  if (musicOn) {
+    if (!audio) initAudio();
+    audio.resume(); scheduleBar();
+    clearInterval(musicTimer); musicTimer = setInterval(scheduleBar, BEAT_SECONDS * 4000);
+  } else { clearInterval(musicTimer); if (audio) audio.suspend(); }
+}
+$("musicBtn").addEventListener("click", () => setMusic(!musicOn));
+$("volume").addEventListener("input", (e) => { store.set("volume", e.target.value); if (master) master.gain.value = +e.target.value * 0.5; });
+if (store.get("volume")) $("volume").value = store.get("volume");
+// music stays off on load (autoplay rules); the saved choice is only remembered for the button state this session
+
+// =====================================================================
+// LOW-STIMULATION MODE
+// =====================================================================
+function applyLowStim() {
+  document.body.classList.toggle("lowstim", lowStim);
+  $("lowstim").checked = lowStim;
+  $("musicBtn").disabled = lowStim; $("volume").disabled = lowStim;
+  if (lowStim && musicOn) setMusic(false);
+  if (!scene) return;
+  scene.background = lowStim ? new THREE.Color("#e8ecf3") : null;
+  stars.visible = !lowStim; clouds.forEach((c) => (c.visible = !lowStim));
+  controls.enableDamping = !lowStim;
+  islands.forEach((s) => s.meshes.forEach((m) => {
+    if (!m.userData.baseColor) m.userData.baseColor = m.material.color.clone();
+    const c = m.userData.baseColor.clone();
+    if (lowStim) { const hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, hsl.s * 0.35, hsl.l); }
+    m.material = m.material.clone(); m.material.color.copy(c); m.material.emissive.setHex(0x000000);
+  }));
+}
+$("lowstim").addEventListener("change", (e) => { lowStim = e.target.checked; store.set("lowstim", lowStim ? "1" : "0"); applyLowStim(); });
+
+// =====================================================================
+// RENDER LOOP
+// =====================================================================
+const tmp = new THREE.Vector3();
+function resize() {
+  if (!renderer) return;
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  updateViewOffset();
+}
+addEventListener("resize", resize);
+resize();
+if (camera) camera.position.copy(overviewPos()); // start view fits the screen shape
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  if (!renderer) return;
+  const t = now / 1000;
+  if (fly) {
+    const u = Math.min(1, (now - fly.t0) / fly.dur), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    camera.position.lerpVectors(fly.fromPos, fly.toPos, e);
+    controls.target.lerpVectors(fly.fromTarget, fly.toTarget, e);
+    if (u >= 1) fly = null;
+  }
+  if (!lowStim) {
+    islands.forEach((s) => { s.group.position.y = s.baseY + Math.sin(t * 0.6 + s.phase) * 0.25; s.group.rotation.y = Math.sin(t * 0.2 + s.phase) * 0.08; });
+    stars.rotation.y = t * 0.004;
+    clouds.forEach((c) => { c.userData.angle += c.userData.speed * 0.016; c.position.x = Math.cos(c.userData.angle) * 30; c.position.z = Math.sin(c.userData.angle) * 30; });
+  }
+  // hover / focus highlight: soft glow (none in low-stimulation mode)
+  const hot = hovered >= 0 ? hovered : focusedIdx;
+  islands.forEach((s, i) => {
+    const on = i === hot || i === openIdx;
+    if (!lowStim) s.meshes.forEach((m) => m.material.emissive.setHex(on ? 0x3a2f7a : 0x000000));
+    s.group.scale.setScalar(on && !lowStim ? 1.06 : 1);
+    labelEls[i].classList.toggle("hot", on);
+  });
+  controls.update();
+  renderer.render(scene, camera);
+  // position the HTML labels above each island
+  islands.forEach((s, i) => {
+    tmp.copy(s.group.position); tmp.y += 3.0; tmp.project(camera);
+    const lab = labelEls[i], visible = tmp.z < 1;
+    lab.hidden = !visible;
+    if (visible) lab.style.transform = `translate(${(tmp.x * 0.5 + 0.5) * innerWidth}px, ${(-tmp.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -100%)`;
+  });
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

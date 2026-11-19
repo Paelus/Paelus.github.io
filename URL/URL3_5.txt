@@ -1,2 +1,2 @@
-Pforzheim AI Course Islands
-https://drluarn.github.io/course_islands.html
+Pforzheim AI Course Islands - interactive 3D course map (Three.js) with 6 islands, activities, ambient music and low-stimulation mode
+https://paelus.github.io/islands/
