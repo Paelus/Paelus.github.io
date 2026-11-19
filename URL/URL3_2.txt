@@ -1,2 +1,1 @@
-YOLO
-https://drluarn.github.io/
+YOLO26n object detection in the browser - live CCTV, video file, image and webcam
