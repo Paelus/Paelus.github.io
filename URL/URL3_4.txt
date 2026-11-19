@@ -1,2 +1,1 @@
-Chat Bot
-https://drluarn.github.io/
+Simple chat app with my Gemini API key - local chat interface, default model gemini-3.5-flash-lite, streaming answers
