@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural Style Studio</title>
+<style>
+  :root {
+    --bg: #0f0d12; --panel: #19161f; --panel2: #221e2a; --border: #322c3d;
+    --text: #f1edf7; --muted: #a39cb3; --accent: #ff8a5c; --ok: #6be3a4; --bad: #ff6b7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 20px 6px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  #engine { font-size: 12px; color: var(--muted); }
+  main { padding: 12px 20px 28px; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .card + .card { margin-top: 14px; }
+  .card h2 { font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  #drop { border: 2px dashed var(--border); border-radius: 12px; padding: 18px; text-align: center; cursor: pointer;
+    color: var(--muted); font-size: 13px; transition: border-color 0.2s; }
+  #drop.over { border-color: var(--accent); color: var(--text); }
+  #original { width: 100%; border-radius: 10px; margin-top: 10px; display: block; }
+  label.row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin: 10px 0 6px; }
+  select { width: 100%; padding: 8px; border-radius: 8px; background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button { padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel2);
+    color: var(--text); font-weight: 600; font-size: 13px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #2a0f00; border-color: var(--accent); width: 100%; margin-top: 10px; }
+  button:disabled { opacity: 0.45; cursor: default; }
+
+  .styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .style-btn { padding: 0; overflow: hidden; text-align: left; border-radius: 10px; }
+  .style-btn img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #000; }
+  .style-btn span { display: block; padding: 6px 8px; font-size: 12px; }
+  .style-btn.active { outline: 2px solid var(--accent); }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 4px; }
+  figure { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  figure canvas { display: block; width: 100%; height: auto; background: #000; }
+  figcaption { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; }
+  figcaption small { color: var(--muted); }
+  figcaption a { color: var(--accent); font-size: 12px; text-decoration: none; }
+  .ph { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; gap: 8px; }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 18px; }
+  #status.error { color: var(--bad); }
+  .empty { color: var(--muted); font-size: 14px; padding: 40px 10px; text-align: center; }
+  footer { color: var(--muted); font-size: 12px; padding: 0 20px 24px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1><span>Neural Style</span> Studio</h1>
+    <p>Extra Credit #3-9 · MMI5194 · Upload a photo and repaint it in 11 artistic styles – computed entirely in your browser (ONNX Runtime Web, WASM, Web Worker).</p>
+  </div>
+  <div id="engine">Starting engine…</div>
+</header>
+
+<main>
+  <aside>
+    <div class="card">
+      <h2>1 · Your photo</h2>
+      <div id="drop" tabindex="0" role="button" aria-label="Choose or drop a photo">Drop a photo here or click to choose</div>
+      <input id="file" type="file" accept="image/*" hidden>
+      <img id="original" alt="Your photo" hidden>
+      <label class="row" for="size"><span>Output size (longest side)</span></label>
+      <select id="size">
+        <option value="512">512 px · fast</option>
+        <option value="768" selected>768 px · balanced</option>
+        <option value="1024">1024 px · detailed (slower)</option>
+      </select>
+      <button class="primary" id="allBtn" disabled>Paint all 11 styles</button>
+      <div id="status" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <h2>2 · Or pick single styles</h2>
+      <div class="styles" id="styles"></div>
+    </div>
+  </aside>
+
+  <section class="card">
+    <h2>Results</h2>
+    <div class="gallery" id="gallery"><div class="empty">Choose a photo, then paint all styles or click a style on the left.</div></div>
+  </section>
+</main>
+
+<footer>
+  Models: ONNX Model Zoo fast neural style (candy, mosaic, rain princess, udnie, pointilism; Apache-2.0) and
+  Justin Johnson's <a href="https://github.com/jcjohnson/fast-neural-style" style="color:inherit">fast-neural-style</a>
+  (starry night, the wave, composition VII, the scream, feathers, la muse; converted from Torch7 to ONNX).
+  The models are free for personal or research use. Your photo never leaves your device.
+</footer>
+
+<script>
+const STYLES = [
+  { id: "candy", name: "Candy" },
+  { id: "mosaic", name: "Mosaic" },
+  { id: "rain-princess", name: "Rain Princess" },
+  { id: "udnie", name: "Udnie" },
+  { id: "pointilism", name: "Pointillism" },
+  { id: "starry-night", name: "Starry Night" },
+  { id: "the-wave", name: "The Wave" },
+  { id: "composition-vii", name: "Composition VII" },
+  { id: "the-scream", name: "The Scream" },
+  { id: "feathers", name: "Feathers" },
+  { id: "la-muse", name: "La Muse" },
+];
+const $ = (id) => document.getElementById(id);
+
+// ---------- Worker (all heavy work happens there) ----------
+const worker = new Worker("worker.js");
+const pending = new Map();
+let jobId = 0;
+worker.onmessage = (e) => {
+  const m = e.data;
+  if (m.type === "status") { setStatus(m.text); return; }
+  const p = pending.get(m.id);
+  if (!p) return;
+  pending.delete(m.id);
+  m.type === "result" ? p.resolve(m) : p.reject(new Error(m.message));
+};
+worker.onerror = (e) => setStatus("Worker error: " + e.message, true);
+function runStyle(style, input) {
+  return new Promise((resolve, reject) => {
+    const id = ++jobId;
+    pending.set(id, { resolve, reject });
+    const data = input.data.slice(); // copy, because the buffer is transferred
+    worker.postMessage({ id, style, data, width: input.width, height: input.height }, [data.buffer]);
+  });
+}
+
+$("engine").textContent = self.crossOriginIsolated
+  ? `ONNX Runtime Web · WASM · ${Math.min(4, navigator.hardwareConcurrency || 2)} threads in a Web Worker`
+  : "ONNX Runtime Web · WASM · 1 thread in a Web Worker";
+
+function setStatus(text, error = false) {
+  $("status").textContent = text;
+  $("status").className = error ? "error" : "";
+}
+
+// ---------- Photo input ----------
+let photo = null; // HTMLImageElement
+function loadFile(file) {
+  if (!file || !file.type.startsWith("image/")) return setStatus("Please choose an image file.", true);
+  const img = new Image();
+  img.onload = () => {
+    photo = img;
+    $("original").src = img.src; $("original").hidden = false;
+    $("drop").textContent = file.name + " · click to change";
+    $("allBtn").disabled = false;
+    document.querySelectorAll(".style-btn").forEach((b) => (b.disabled = false));
+    $("gallery").innerHTML = "";
+    setStatus("Photo ready. Paint all styles or pick one.");
+  };
+  img.onerror = () => setStatus("This image could not be read.", true);
+  img.src = URL.createObjectURL(file);
+}
+$("drop").addEventListener("click", () => $("file").click());
+$("drop").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") $("file").click(); });
+$("file").addEventListener("change", (e) => loadFile(e.target.files[0]));
+$("drop").addEventListener("dragover", (e) => { e.preventDefault(); $("drop").classList.add("over"); });
+$("drop").addEventListener("dragleave", () => $("drop").classList.remove("over"));
+$("drop").addEventListener("drop", (e) => { e.preventDefault(); $("drop").classList.remove("over"); loadFile(e.dataTransfer.files[0]); });
+
+// Photo -> float32 RGB 0-255, NCHW; size rounded to a multiple of 4 (the networks downsample twice)
+function toInput(img, maxSide) {
+  const s = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.max(4, Math.round(img.naturalWidth * s / 4) * 4), h = Math.max(4, Math.round(img.naturalHeight * s / 4) * 4);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, w, h);
+  const px = ctx.getImageData(0, 0, w, h).data, area = w * h, data = new Float32Array(3 * area);
+  for (let i = 0; i < area; i++) {
+    data[i] = px[4 * i]; data[i + area] = px[4 * i + 1]; data[i + 2 * area] = px[4 * i + 2];
+  }
+  return { data, width: w, height: h };
+}
+
+// ---------- Results ----------
+function addCard(style) {
+  const fig = document.createElement("figure");
+  fig.id = "res-" + style.id;
+  fig.innerHTML = `<div class="ph"><div class="spinner"></div>queued</div><figcaption><span>${style.name}</span><small></small></figcaption>`;
+  const old = $("res-" + style.id);
+  old ? old.replaceWith(fig) : $("gallery").appendChild(fig);
+  return fig;
+}
+function showResult(fig, style, r) {
+  const c = document.createElement("canvas");
+  c.width = r.width; c.height = r.height;
+  c.getContext("2d").putImageData(new ImageData(r.rgba, r.width, r.height), 0, 0);
+  fig.querySelector(".ph").replaceWith(c);
+  fig.querySelector("small").innerHTML = `${(r.ms / 1000).toFixed(1)} s · <a download="style_${style.id}.png" href="#">save</a>`;
+  fig.querySelector("a").addEventListener("click", (e) => { e.preventDefault(); const a = document.createElement("a");
+    a.download = `style_${style.id}.png`; a.href = c.toDataURL("image/png"); a.click(); });
+}
+
+let busy = false;
+async function paint(styles) {
+  if (!photo || busy) return;
+  busy = true;
+  $("allBtn").disabled = true;
+  const input = toInput(photo, +$("size").value);
+  const cards = styles.map((s) => [s, addCard(s)]);
+  let done = 0;
+  for (const [style, fig] of cards) {
+    fig.querySelector(".ph").innerHTML = '<div class="spinner"></div>painting…';
+    try {
+      const r = await runStyle(style.id, input);
+      showResult(fig, style, r);
+      done++;
+      setStatus(`${done} / ${styles.length} done (${input.width}×${input.height} px)`);
+    } catch (err) {
+      fig.querySelector(".ph").textContent = "failed: " + err.message;
+      setStatus(`“${style.name}” failed: ${err.message}`, true);
+    }
+  }
+  busy = false;
+  $("allBtn").disabled = false;
+}
+$("allBtn").addEventListener("click", () => paint(STYLES));
+
+// Style picker with small preview thumbnails
+$("styles").innerHTML = STYLES.map((s) =>
+  `<button class="style-btn" data-id="${s.id}" disabled><img src="previews/${s.id}.jpg" alt="" loading="lazy"><span>${s.name}</span></button>`).join("");
+document.querySelectorAll(".style-btn").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll(".style-btn").forEach((x) => x.classList.toggle("active", x === b));
+  paint([STYLES.find((s) => s.id === b.dataset.id)]);
+}));
+</script>
+</body>
+</html>
