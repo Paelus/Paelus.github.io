@@ -266,8 +266,10 @@ function buildScene() {
   controls.maxPolarAngle = Math.PI * 0.48; controls.enablePan = false;
   controls.target.set(0, 1, 0);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xd9c8ff, 1.15));
-  const sun = new THREE.DirectionalLight(0xfff3e0, 1.1); sun.position.set(8, 20, 10); scene.add(sun);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  scene.add(new THREE.HemisphereLight(0xf2f6ff, 0xb9a6d6, 1.6));      // soft sky / lilac bounce light
+  const sun = new THREE.DirectionalLight(0xffe9c7, 2.0); sun.position.set(10, 22, 12); scene.add(sun);
+  const rim = new THREE.DirectionalLight(0xc9d8ff, 0.7); rim.position.set(-12, 6, -14); scene.add(rim);
 
   // soft "space" backdrop: slow stars and drifting clouds
   const sg = new THREE.BufferGeometry(), pts = [];
@@ -278,13 +280,14 @@ function buildScene() {
   sg.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
   stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.9, transparent: true, opacity: 0.75 }));
   scene.add(stars);
-  const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+  const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, flatShading: true, transparent: true, opacity: 0.9 });
   for (let i = 0; i < 7; i++) {
     const c = new THREE.Group();
-    for (let k = 0; k < 4; k++) {
-      const s = new THREE.Mesh(new THREE.SphereGeometry(1 + Math.random() * 0.8, 16, 12), cloudMat);
-      s.position.set(k * 1.3 - 2, Math.random() * 0.5, Math.random() * 0.8); c.add(s);
+    for (let k = 0; k < 5; k++) {
+      const s = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 + Math.random() * 0.7, 1), cloudMat);
+      s.position.set(k * 1.1 - 2.2, Math.random() * 0.4, Math.random() * 0.8 - 0.4); c.add(s);
     }
+    c.scale.y = 0.6; // flat, fluffy clouds
     const a = (i / 7) * Math.PI * 2;
     c.position.set(Math.cos(a) * 30, 7 + Math.random() * 6, Math.sin(a) * 30);
     c.userData.speed = 0.01 + Math.random() * 0.01; c.userData.angle = a;
@@ -294,63 +297,150 @@ function buildScene() {
   // six islands in a gentle ring
   ISLANDS.forEach((d, i) => {
     const a = (i / ISLANDS.length) * Math.PI * 2 - Math.PI / 2;
-    const g = new THREE.Group();
+    const g = makeIsland(d.color, i + 1);
     g.position.set(Math.cos(a) * 10, (i % 2) * 1.2, Math.sin(a) * 10);
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.2, 0.6, 40), mat(d.color));
-    const rock = new THREE.Mesh(new THREE.SphereGeometry(2.2, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat("#d8c3b0"));
-    rock.scale.y = 1.2; rock.position.y = -0.3;
-    g.add(top, rock);
-    const lm = landmark(d.landmark); lm.position.y = 0.3; g.add(lm);
-    // soft fake shadow disc instead of real shadows (cheaper)
-    const sh = new THREE.Mesh(new THREE.CircleGeometry(2.2, 32), new THREE.MeshBasicMaterial({ color: 0x5b5f97, transparent: true, opacity: 0.12 }));
-    sh.rotation.x = -Math.PI / 2; sh.position.y = -4.5; g.add(sh);
+    const lm = landmark(d.landmark); lm.position.y = 0.32; g.add(lm);
+    g.rotation.y = -a + Math.PI / 2; // landmark faces outward, toward the camera when it flies in
     g.userData.index = i;
     scene.add(g);
-    islands.push({ data: d, group: g, baseY: g.position.y, phase: i * 1.3, meshes: collectMeshes(g) });
+    islands.push({ data: d, group: g, baseY: g.position.y, baseRot: g.rotation.y, phase: i * 1.3, meshes: collectMeshes(g) });
   });
   applyLowStim();
 }
 
-function mat(hex) {
-  return new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.75, metalness: 0.0, emissive: 0x000000 });
+// Soft, low-poly materials (flat shading gives the faceted "cute game" look)
+function mat(hex, opts = {}) {
+  return new THREE.MeshStandardMaterial({ color: new THREE.Color(hex), roughness: 0.85, metalness: 0, flatShading: true, emissive: 0x000000, ...opts });
 }
-// meshes that can glow and be clicked (the flat shadow disc has no emissive color and is skipped)
-function collectMeshes(g) { const m = []; g.traverse((o) => o.isMesh && o.material.emissive && m.push(o)); return m; }
+// meshes that can glow and be clicked; remember each one's own emissive color (screens, lights)
+function collectMeshes(g) {
+  const m = [];
+  g.traverse((o) => { if (o.isMesh && o.material.emissive) { o.userData.baseEmissive = o.material.emissive.clone(); m.push(o); } });
+  return m;
+}
+const HOVER_GLOW = new THREE.Color(0x2e2566), NO_GLOW = new THREE.Color(0x000000);
 
-// Small low-poly landmarks hinting at each island's theme
+// Small seeded random generator, so every island always gets the same shape
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+// Jitter the vertices of a geometry (keeps shared corners together, so the surface stays closed)
+function roughen(geo, amount, r, keep = () => false) {
+  const pos = geo.attributes.position, seen = new Map(), v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const key = `${v.x.toFixed(3)},${v.y.toFixed(3)},${v.z.toFixed(3)}`;
+    if (!seen.has(key)) seen.set(key, keep(v) ? [0, 0, 0] : [(r() - 0.5) * amount, (r() - 0.5) * amount, (r() - 0.5) * amount]);
+    const [dx, dy, dz] = seen.get(key);
+    pos.setXYZ(i, v.x + dx, v.y + dy, v.z + dz);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+// A floating island: pointed rock underneath, a layer of soil, a soft meadow on top, trees, stones and flowers
+function makeIsland(color, seed) {
+  const r = rng(seed * 9973), g = new THREE.Group();
+  const meadow = new THREE.Color(color).lerp(new THREE.Color("#ffffff"), 0.15);
+
+  const top = new THREE.Mesh(roughen(new THREE.CylinderGeometry(2.55, 2.45, 0.42, 14, 1), 0.18, r, (v) => v.y > 0.2), mat(meadow));
+  top.position.y = 0.1;
+  const soil = new THREE.Mesh(roughen(new THREE.CylinderGeometry(2.42, 2.1, 0.55, 14, 1), 0.15, r), mat("#a9826a"));
+  soil.position.y = -0.35;
+  const rock = new THREE.Mesh(roughen(new THREE.ConeGeometry(2.15, 3.4, 10, 4), 0.45, r, (v) => v.y > 1.65), mat("#b7a6c9"));
+  rock.rotation.x = Math.PI; rock.position.y = -2.3;
+  g.add(top, soil, rock);
+
+  // little rocks floating under the island
+  for (let k = 0; k < 3; k++) {
+    const bit = new THREE.Mesh(new THREE.DodecahedronGeometry(0.18 + r() * 0.2, 0), mat("#b7a6c9"));
+    const a = r() * Math.PI * 2;
+    bit.position.set(Math.cos(a) * (1.4 + r()), -3 - r() * 1.5, Math.sin(a) * (1.4 + r()));
+    bit.rotation.set(r() * 3, r() * 3, 0);
+    g.add(bit);
+  }
+
+  // decorations on the outer part of the meadow, the middle stays free for the landmark
+  const spot = () => { const a = r() * Math.PI * 2, d = 1.35 + r() * 0.85; return [Math.cos(a) * d, Math.sin(a) * d]; };
+  // trees stay out of the front (+z) so they never hide the landmark's face from the camera
+  const treeSpot = () => { const a = Math.PI / 2 + 0.9 + r() * (Math.PI * 2 - 1.8), d = 1.45 + r() * 0.7; return [Math.cos(a) * d, Math.sin(a) * d]; };
+  const greens = ["#6cc49a", "#83d1a4", "#5fb88f", "#9ad97b"];
+  for (let k = 0; k < 3; k++) {
+    const [x, z] = treeSpot(), s = 0.75 + r() * 0.5;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.09 * s, 0.45 * s, 6), mat("#8d6e63"));
+    trunk.position.set(x, 0.32 + 0.22 * s, z);
+    const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.38 * s, 0), mat(greens[Math.floor(r() * greens.length)]));
+    crown.position.set(x, 0.32 + 0.62 * s, z); crown.rotation.y = r() * 3;
+    g.add(trunk, crown);
+  }
+  for (let k = 0; k < 3; k++) {
+    const [x, z] = spot(), stone = new THREE.Mesh(new THREE.DodecahedronGeometry(0.12 + r() * 0.1, 0), mat("#d6d0e2"));
+    stone.position.set(x, 0.36, z); stone.scale.y = 0.6; g.add(stone);
+  }
+  const petals = ["#ff9fb5", "#ffd166", "#ffffff", "#c3a6ff"];
+  for (let k = 0; k < 7; k++) {
+    const [x, z] = spot(), f = new THREE.Mesh(new THREE.IcosahedronGeometry(0.055, 0), mat(petals[k % petals.length]));
+    f.position.set(x, 0.36, z); g.add(f);
+  }
+  return g;
+}
+
+// Small low-poly landmarks hinting at each island's theme (front = +z, facing the ring center)
 function landmark(kind) {
   const g = new THREE.Group();
-  const add = (geo, color, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat(color)); m.position.set(x, y, z); g.add(m); return m; };
-  if (kind === "camera") {          // tiny camera tower
-    add(new THREE.CylinderGeometry(0.25, 0.35, 2, 12), "#ffffff", 0, 1, 0);
-    add(new THREE.BoxGeometry(1.2, 0.8, 0.8), "#4a4e69", 0, 2.3, 0);
-    add(new THREE.CylinderGeometry(0.28, 0.28, 0.4, 16), "#9ad1ff", 0, 2.3, 0.55).rotation.x = Math.PI / 2;
-  } else if (kind === "face") {     // face-shaped hill
-    add(new THREE.SphereGeometry(1.3, 24, 16), "#ffd7c2", 0, 1.1, 0);
-    add(new THREE.SphereGeometry(0.16, 12, 8), "#3d405b", -0.42, 1.45, 1.2);
-    add(new THREE.SphereGeometry(0.16, 12, 8), "#3d405b", 0.42, 1.45, 1.2);
-    const smile = add(new THREE.TorusGeometry(0.42, 0.07, 8, 20, Math.PI), "#e07a5f", 0, 0.95, 1.22); smile.rotation.z = Math.PI;
-  } else if (kind === "chip") {     // AI chip with pins (input -> model -> output)
-    add(new THREE.BoxGeometry(1.8, 0.4, 1.8), "#5f6caf", 0, 0.5, 0);
-    add(new THREE.BoxGeometry(0.9, 0.2, 0.9), "#ffffff", 0, 0.8, 0);
-    for (let k = -2; k <= 2; k++) { add(new THREE.BoxGeometry(0.12, 0.1, 0.45), "#c9ccd5", k * 0.33, 0.35, 1.1); add(new THREE.BoxGeometry(0.12, 0.1, 0.45), "#c9ccd5", k * 0.33, 0.35, -1.1); }
-  } else if (kind === "easel") {    // canvas on an easel with paint dots
-    add(new THREE.BoxGeometry(1.6, 1.2, 0.12), "#fffaf0", 0, 1.6, 0);
-    add(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), "#b08968", -0.5, 1, -0.2);
-    add(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), "#b08968", 0.5, 1, -0.2);
-    ["#ff6b6b", "#4ecdc4", "#ffd93d"].forEach((c, k) => add(new THREE.SphereGeometry(0.15, 10, 8), c, -0.4 + k * 0.4, 1.7, 0.1));
-  } else if (kind === "robot") {    // robot hut
-    add(new THREE.BoxGeometry(1.3, 1.2, 1.1), "#e0e1dd", 0, 0.9, 0);
-    add(new THREE.BoxGeometry(0.9, 0.7, 0.8), "#ffffff", 0, 1.9, 0);
-    add(new THREE.SphereGeometry(0.11, 10, 8), "#6c63ff", -0.2, 1.95, 0.42);
-    add(new THREE.SphereGeometry(0.11, 10, 8), "#6c63ff", 0.2, 1.95, 0.42);
-    add(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), "#8d99ae", 0, 2.5, 0);
-    add(new THREE.SphereGeometry(0.12, 10, 8), "#ff6b6b", 0, 2.8, 0);
-  } else {                          // rocket = next wave
-    add(new THREE.CylinderGeometry(0.45, 0.45, 1.8, 20), "#ffffff", 0, 1.2, 0);
-    add(new THREE.ConeGeometry(0.45, 0.8, 20), "#ff6b6b", 0, 2.5, 0);
-    add(new THREE.SphereGeometry(0.18, 12, 8), "#9ad1ff", 0, 1.5, 0.42);
-    for (let k = 0; k < 3; k++) { const f = add(new THREE.BoxGeometry(0.08, 0.5, 0.5), "#ff9f1c", 0, 0.45, 0); f.rotation.y = (k / 3) * Math.PI * 2; f.translateZ(0.45); }
+  const add = (geo, color, x = 0, y = 0, z = 0, opts) => { const m = new THREE.Mesh(geo, mat(color, opts)); m.position.set(x, y, z); g.add(m); return m; };
+  const glow = (c) => ({ emissive: new THREE.Color(c), emissiveIntensity: 0.55 }); // small screens/lights that shine a little
+  if (kind === "camera") {          // camera on a tripod
+    for (let k = 0; k < 3; k++) {
+      const leg = add(new THREE.CylinderGeometry(0.035, 0.05, 1.5, 6), "#6d6875", 0, 0.68, 0);
+      leg.rotation.z = 0.28; leg.rotation.y = (k / 3) * Math.PI * 2;
+      leg.position.set(Math.sin((k / 3) * Math.PI * 2) * 0.22, 0.68, Math.cos((k / 3) * Math.PI * 2) * 0.22);
+    }
+    add(new THREE.BoxGeometry(0.95, 0.62, 0.62), "#4a4e69", 0, 1.62, 0);
+    add(new THREE.CylinderGeometry(0.24, 0.27, 0.36, 12), "#2b2d42", 0, 1.62, 0.46).rotation.x = Math.PI / 2;
+    add(new THREE.CylinderGeometry(0.18, 0.18, 0.04, 12), "#9ad1ff", 0, 1.62, 0.65).rotation.x = Math.PI / 2;
+    add(new THREE.SphereGeometry(0.06, 8, 6), "#ff5d73", 0.34, 1.86, 0.32);
+  } else if (kind === "face") {     // a friendly face-shaped hill
+    const hill = add(new THREE.SphereGeometry(1.15, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), "#ffcfb3"); hill.scale.y = 1.05;
+    add(new THREE.SphereGeometry(0.13, 10, 8), "#3d405b", -0.36, 0.72, 0.9);
+    add(new THREE.SphereGeometry(0.13, 10, 8), "#3d405b", 0.36, 0.72, 0.9);
+    add(new THREE.SphereGeometry(0.14, 10, 8), "#ff9fb5", -0.62, 0.48, 0.92).scale.z = 0.4;
+    add(new THREE.SphereGeometry(0.14, 10, 8), "#ff9fb5", 0.62, 0.48, 0.92).scale.z = 0.4;
+    const smile = add(new THREE.TorusGeometry(0.22, 0.045, 6, 14, Math.PI), "#c0392b", 0, 0.48, 1.0); smile.rotation.z = Math.PI;
+  } else if (kind === "chip") {     // AI chip on a little platform
+    add(new THREE.BoxGeometry(1.5, 0.32, 1.5), "#4f5aa8", 0, 0.42, 0);
+    add(new THREE.BoxGeometry(0.75, 0.16, 0.75), "#e9ecff", 0, 0.66, 0);
+    add(new THREE.BoxGeometry(0.36, 0.06, 0.36), "#7c9cff", 0, 0.76, 0, glow("#7c9cff"));
+    for (let k = -2; k <= 2; k++) for (const s of [-1, 1]) {
+      add(new THREE.BoxGeometry(0.1, 0.08, 0.32), "#f1c27d", k * 0.27, 0.3, s * 0.88);
+      add(new THREE.BoxGeometry(0.32, 0.08, 0.1), "#f1c27d", s * 0.88, 0.3, k * 0.27);
+    }
+  } else if (kind === "easel") {    // painting on an easel + palette
+    const legL = add(new THREE.CylinderGeometry(0.05, 0.05, 2, 6), "#b08968", -0.45, 0.95, 0); legL.rotation.z = -0.12;
+    const legR = add(new THREE.CylinderGeometry(0.05, 0.05, 2, 6), "#b08968", 0.45, 0.95, 0); legR.rotation.z = 0.12;
+    const back = add(new THREE.CylinderGeometry(0.045, 0.045, 1.9, 6), "#b08968", 0, 0.9, -0.35); back.rotation.x = -0.25;
+    add(new THREE.BoxGeometry(1.4, 1.0, 0.08), "#fffaf0", 0, 1.45, 0.06);
+    [["#ff6b6b", -0.35, 1.6], ["#4ecdc4", 0.05, 1.35], ["#ffd93d", 0.35, 1.62], ["#6c63ff", -0.1, 1.68]]
+      .forEach(([c, x, y]) => add(new THREE.SphereGeometry(0.12, 8, 6), c, x, y, 0.12).scale.z = 0.3);
+  } else if (kind === "robot") {    // cute robot
+    add(new THREE.BoxGeometry(0.8, 0.75, 0.6), "#e9ecef", 0, 0.75, 0);
+    add(new THREE.BoxGeometry(0.42, 0.28, 0.04), "#7c9cff", 0, 0.78, 0.31, glow("#7c9cff"));
+    add(new THREE.BoxGeometry(0.72, 0.55, 0.6), "#ffffff", 0, 1.45, 0);
+    add(new THREE.SphereGeometry(0.09, 8, 6), "#2b2d42", -0.17, 1.5, 0.31);
+    add(new THREE.SphereGeometry(0.09, 8, 6), "#2b2d42", 0.17, 1.5, 0.31);
+    add(new THREE.CylinderGeometry(0.03, 0.03, 0.35, 6), "#8d99ae", 0, 1.9, 0);
+    add(new THREE.SphereGeometry(0.09, 8, 6), "#ff5d73", 0, 2.1, 0, glow("#ff5d73"));
+    for (const s of [-1, 1]) { const arm = add(new THREE.CylinderGeometry(0.07, 0.07, 0.55, 6), "#cfd4da", s * 0.52, 0.8, 0); arm.rotation.z = s * 0.35; }
+    for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.22, 0.38, 0.3), "#adb5bd", s * 0.2, 0.2, 0);
+  } else {                          // rocket on a launch pad = the next wave
+    add(new THREE.CylinderGeometry(0.75, 0.85, 0.16, 12), "#adb5bd", 0, 0.08, 0);
+    add(new THREE.CylinderGeometry(0.36, 0.42, 1.5, 12), "#ffffff", 0, 1.0, 0);
+    add(new THREE.ConeGeometry(0.36, 0.7, 12), "#ff6b6b", 0, 2.1, 0);
+    add(new THREE.CylinderGeometry(0.15, 0.15, 0.05, 12), "#9ad1ff", 0, 1.3, 0.38).rotation.x = Math.PI / 2;
+    for (let k = 0; k < 3; k++) {
+      const f = add(new THREE.BoxGeometry(0.06, 0.45, 0.42), "#ff9f1c", 0, 0.45, 0);
+      f.rotation.y = (k / 3) * Math.PI * 2; f.translateZ(0.42);
+    }
   }
   return g;
 }
@@ -688,7 +778,8 @@ function applyLowStim() {
     if (!m.userData.baseColor) m.userData.baseColor = m.material.color.clone();
     const c = m.userData.baseColor.clone();
     if (lowStim) { const hsl = {}; c.getHSL(hsl); c.setHSL(hsl.h, hsl.s * 0.35, hsl.l); }
-    m.material = m.material.clone(); m.material.color.copy(c); m.material.emissive.setHex(0x000000);
+    m.material = m.material.clone(); m.material.color.copy(c);
+    m.material.emissive.copy(lowStim ? new THREE.Color(0x000000) : m.userData.baseEmissive); // no glow in low-stimulation mode
   }));
 }
 $("lowstim").addEventListener("change", (e) => { lowStim = e.target.checked; store.set("lowstim", lowStim ? "1" : "0"); applyLowStim(); });
@@ -718,7 +809,7 @@ function animate(now) {
     if (u >= 1) fly = null;
   }
   if (!lowStim) {
-    islands.forEach((s) => { s.group.position.y = s.baseY + Math.sin(t * 0.6 + s.phase) * 0.25; s.group.rotation.y = Math.sin(t * 0.2 + s.phase) * 0.08; });
+    islands.forEach((s) => { s.group.position.y = s.baseY + Math.sin(t * 0.6 + s.phase) * 0.25; s.group.rotation.y = s.baseRot + Math.sin(t * 0.2 + s.phase) * 0.08; });
     stars.rotation.y = t * 0.004;
     clouds.forEach((c) => { c.userData.angle += c.userData.speed * 0.016; c.position.x = Math.cos(c.userData.angle) * 30; c.position.z = Math.sin(c.userData.angle) * 30; });
   }
@@ -726,7 +817,7 @@ function animate(now) {
   const hot = hovered >= 0 ? hovered : focusedIdx;
   islands.forEach((s, i) => {
     const on = i === hot || i === openIdx;
-    if (!lowStim) s.meshes.forEach((m) => m.material.emissive.setHex(on ? 0x3a2f7a : 0x000000));
+    if (!lowStim) s.meshes.forEach((m) => m.material.emissive.copy(m.userData.baseEmissive).add(on ? HOVER_GLOW : NO_GLOW));
     s.group.scale.setScalar(on && !lowStim ? 1.06 : 1);
     labelEls[i].classList.toggle("hot", on);
   });
@@ -735,7 +826,8 @@ function animate(now) {
   // position the HTML labels above each island
   islands.forEach((s, i) => {
     tmp.copy(s.group.position); tmp.y += 3.0; tmp.project(camera);
-    const lab = labelEls[i], visible = tmp.z < 1;
+    // while an island is open, only its own label is shown (the others would float over the panel)
+    const lab = labelEls[i], visible = tmp.z < 1 && (openIdx < 0 || openIdx === i);
     lab.hidden = !visible;
     if (visible) lab.style.transform = `translate(${(tmp.x * 0.5 + 0.5) * innerWidth}px, ${(-tmp.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -100%)`;
   });
