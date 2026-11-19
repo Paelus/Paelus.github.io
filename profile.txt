@@ -6,7 +6,7 @@
 
 name=Pascal Mueller
 
-title1=Student
+title1=Master Marketing Intelligence Student @HSPF
 
 title2=StudentID:325712
 
