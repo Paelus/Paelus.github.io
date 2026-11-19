@@ -1,0 +1,1 @@
+Extra Credit #3-9 - browser-only Neural Style Transfer (ONNX Runtime Web in a Web Worker) with 11 styles: Candy, Mosaic, Rain Princess, Udnie, Pointillism + Starry Night, The Wave, Composition VII, The Scream, Feathers, La Muse converted from Torch7 to ONNX
