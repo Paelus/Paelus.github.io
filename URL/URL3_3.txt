@@ -1,1 +1,1 @@
-Neural Style Transfer in the browser - 11 styles (Candy, Mosaic, Rain Princess, Udnie, Pointillism + Starry Night, The Wave, Composition VII, The Scream, Feathers, La Muse converted from Torch7 to ONNX)
+Neural Style Transfer - new task in my Vision Studio app (Python + OpenCV): photo repainted in 5 styles (Candy, Mosaic, Rain Princess, Udnie, Pointillism)
