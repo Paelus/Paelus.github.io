@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCTV Traffic Analyzer</title><style>
+  :root {
+    --bg: #0b0e14; --panel: #141923; --panel2: #1b2230; --border: #283043;
+    --text: #e8ecf6; --muted: #8f9ab5; --accent: #ffb020; --a: #4fd1ff; --b: #ff5fa2; --ok: #5ee08a; --bad: #ff6b6b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 18px; font-weight: 650; }
+  header h1 span { color: var(--accent); }
+  header a { color: var(--muted); font-size: 13px; }
+  #engine { font-size: 12px; color: var(--muted); }
+  #engine.ok { color: var(--ok); }
+  main { display: grid; grid-template-columns: 290px minmax(0, 1fr) 290px; gap: 14px; padding: 14px 20px; }
+  @media (max-width: 1150px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .card + .card { margin-top: 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 10px; }
+  label.lbl { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 6px; }
+  input[type=url], input[type=number] { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--text); font-size: 13px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2);
+    color: var(--text); font-weight: 600; font-size: 13px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #1d1300; border-color: var(--accent); width: 100%; margin-top: 10px; }
+  button.active { outline: 2px solid var(--accent); }
+  .btnrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; margin: 8px 0; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 8px; }
+  .la { color: var(--a); font-weight: 700; } .lb { color: var(--b); font-weight: 700; }
+
+  .stage { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  #view { width: 100%; display: block; cursor: default; }
+  #view.drawing { cursor: crosshair; }
+  #msg { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
+    text-align: center; padding: 24px; color: var(--muted); font-size: 14px; background: rgba(0,0,0,0.55); }
+  #msg.error { color: var(--bad); }
+  .spinner { width: 30px; height: 30px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.15);
+    border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #drawHint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(20,25,35,0.9);
+    border: 1px solid var(--accent); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 13px; }
+
+  .big { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 11px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  th { color: var(--muted); font-weight: 500; text-align: right; padding: 4px 0; }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 4px 0; border-top: 1px solid var(--border); }
+  #speedLog { max-height: 220px; overflow: auto; }
+  .fast { color: var(--bad); }
+  .empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>CCTV</span> Traffic Analyzer · vehicle counting, heatmap &amp; speed</h1>
+  <div id="engine">Loading detection engine (10 MB, first visit only)…</div>
+</header>
+<p style="padding:10px 20px 0;color:var(--muted);font-size:13px">
+  Extra Credit #3-7 · MMI5194 · YOLO26n runs entirely in your browser (ONNX Runtime Web) – no video leaves your device.
+  Press “Start analysis” for the live Keelung (Taiwan) traffic camera.</p>
+
+<main>
+  <aside>
+    <div class="card">
+      <h2>Camera</h2>
+      <label class="lbl" for="camUrl">MJPEG stream</label>
+      <input id="camUrl" type="url" value="https://cctv.klcg.gov.tw/facd4662">
+      <button class="primary" id="startBtn">Start analysis</button>
+      <div class="btnrow">
+        <button id="pauseBtn" disabled>Pause</button>
+        <button id="resetBtn">Reset counts</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Lines &amp; calibration</h2>
+      <div class="btnrow" style="margin-top:0">
+        <button id="drawA">Set line <span class="la">A</span></button>
+        <button id="drawB">Set line <span class="lb">B</span></button>
+      </div>
+      <p class="hint">Click two points on the video for each line. <span class="la">A</span> is the counting line.
+        For speed, put <span class="la">A</span> and <span class="lb">B</span> across the road on two marks whose real
+        distance you know (e.g. lane markings).</p>
+      <label class="lbl" for="distM">Real distance A → B (meters)</label>
+      <input id="distM" type="number" min="1" max="200" step="0.5" value="12">
+      <label class="lbl" for="limit">Speed limit for highlight (km/h)</label>
+      <input id="limit" type="number" min="5" max="200" step="5" value="50">
+    </div>
+
+    <div class="card">
+      <h2>Display</h2>
+      <div class="row"><label for="hmToggle">Heatmap</label><input id="hmToggle" type="checkbox" checked></div>
+      <div class="row"><span>Heatmap opacity</span><span id="hmOpVal">0.55</span></div>
+      <input id="hmOp" type="range" min="0.1" max="1" step="0.05" value="0.55" aria-label="Heatmap opacity">
+      <div class="row"><label for="trailToggle">Track trails</label><input id="trailToggle" type="checkbox" checked></div>
+      <div class="row"><span>Confidence</span><span id="confVal">0.30</span></div>
+      <input id="conf" type="range" min="0.1" max="0.8" step="0.05" value="0.30" aria-label="Confidence threshold">
+      <button id="hmReset" style="width:100%;margin-top:10px">Clear heatmap</button>
+    </div>
+  </aside>
+
+  <section>
+    <div class="stage">
+      <canvas id="view" width="1280" height="720"></canvas>
+      <div id="msg">Press “Start analysis”.</div>
+      <div id="drawHint" hidden></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Traffic now</h2>
+      <div class="big">
+        <div class="stat"><b id="sTotal">0</b><span>vehicles counted</span></div>
+        <div class="stat"><b id="sRate">0</b><span>vehicles / min</span></div>
+        <div class="stat"><b id="sAvg">–</b><span>avg speed km/h</span></div>
+        <div class="stat"><b id="sOn">0</b><span>vehicles in view</span></div>
+      </div>
+      <div class="row" style="margin-top:10px;color:var(--muted);font-size:12px">
+        <span id="sDet">– detections/s</span><span id="sRun">running 0:00</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Count by type &amp; direction</h2>
+      <table>
+        <thead><tr><th>Type</th><th>↓ / →</th><th>↑ / ←</th><th>Total</th></tr></thead>
+        <tbody id="countTable"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Speed log</h2>
+      <div id="speedLog"><div class="empty">Speeds appear when vehicles cross A and B.</div></div>
+      <button id="csvBtn" style="width:100%;margin-top:10px">Download CSV log</button>
+    </div>
+  </aside>
+</main>
+
+<img id="cam" alt="" crossorigin="anonymous" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js" crossorigin="anonymous"></script>
+<script>
+// ===================== Config =====================
+const SIZE = 640;
+const VEHICLES = { 1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck" }; // COCO ids
+const COLORS = { bicycle: "#7be495", car: "#4fd1ff", motorcycle: "#ffb020", bus: "#c58bff", truck: "#ff7aa8" };
+const $ = (id) => document.getElementById(id);
+
+// ===================== State =====================
+let session = null, running = false, paused = false;
+const img = $("cam"), view = $("view"), ctx = view.getContext("2d");
+const prep = document.createElement("canvas"); prep.width = prep.height = SIZE;
+const pctx = prep.getContext("2d", { willReadFrequently: true });
+
+let lineA = null, lineB = null;   // {x1,y1,x2,y2} in image pixels
+let drawing = null, drawPts = [];
+let tracks = [], nextId = 1;
+let counts = {}, events = [], speeds = [];
+let startTime = 0, detTimes = [];
+let heat = null, heatW = 0, heatH = 0;
+const heatCanvas = document.createElement("canvas"), hctx = heatCanvas.getContext("2d");
+
+// ===================== Engine =====================
+async function loadEngine() {
+  ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+  const threads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
+  ort.env.wasm.numThreads = threads;
+  // model file sits next to this page (works on GitHub Pages without a server)
+  session = await ort.InferenceSession.create("yolo26n.onnx", { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
+  $("engine").textContent = `yolo26n · onnxruntime-web (${threads} thread${threads > 1 ? "s" : ""})`;
+  $("engine").className = "ok";
+}
+const engineReady = loadEngine().catch((e) => { $("engine").textContent = "Engine failed: " + e.message; throw e; });
+
+async function detect(w, h) {
+  const s = Math.min(SIZE / w, SIZE / h), nw = Math.round(w * s), nh = Math.round(h * s);
+  const px = Math.floor((SIZE - nw) / 2), py = Math.floor((SIZE - nh) / 2);
+  pctx.fillStyle = "rgb(114,114,114)"; pctx.fillRect(0, 0, SIZE, SIZE);
+  pctx.drawImage(img, px, py, nw, nh);
+  const { data } = pctx.getImageData(0, 0, SIZE, SIZE), area = SIZE * SIZE, input = new Float32Array(3 * area);
+  for (let i = 0, j = 0; i < area; i++, j += 4) {
+    input[i] = data[j] / 255; input[i + area] = data[j + 1] / 255; input[i + 2 * area] = data[j + 2] / 255;
+  }
+  const out = await session.run({ [session.inputNames[0]]: new ort.Tensor("float32", input, [1, 3, SIZE, SIZE]) });
+  const d = out[session.outputNames[0]].data, conf = +$("conf").value, res = [];
+  for (let i = 0; i < d.length; i += 6) {
+    const cls = VEHICLES[d[i + 5] | 0];
+    if (!cls || d[i + 4] < conf) continue;
+    res.push({ x1: (d[i] - px) / s, y1: (d[i + 1] - py) / s, x2: (d[i + 2] - px) / s, y2: (d[i + 3] - py) / s, score: d[i + 4], cls });
+  }
+  return res;
+}
+
+// ===================== Tracking =====================
+// Greedy matching on predicted position. The camera runs at a few detections per second,
+// so vehicles move far between frames; prediction with the last velocity keeps IDs stable.
+const anchor = (b) => ({ x: (b.x1 + b.x2) / 2, y: b.y2 }); // bottom-center = where the vehicle touches the road
+function iou(a, b) {
+  const ix = Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1)), iy = Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+  const inter = ix * iy, u = (a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter;
+  return u > 0 ? inter / u : 0;
+}
+function updateTracks(dets, t) {
+  const pairs = [];
+  tracks.forEach((tr, ti) => {
+    const dt = (t - tr.t) / 1000;
+    const pred = { x: tr.p.x + tr.v.x * dt, y: tr.p.y + tr.v.y * dt };
+    const size = Math.hypot(tr.box.x2 - tr.box.x1, tr.box.y2 - tr.box.y1);
+    dets.forEach((d, di) => {
+      const a = anchor(d), dist = Math.hypot(a.x - pred.x, a.y - pred.y) / Math.max(size, 20);
+      const cost = dist - iou(tr.box, d) - (tr.cls === d.cls ? 0.2 : 0);
+      if (dist < 1.2) pairs.push({ ti, di, cost });
+    });
+  });
+  pairs.sort((a, b) => a.cost - b.cost);
+  const usedT = new Set(), usedD = new Set();
+  for (const { ti, di } of pairs) {
+    if (usedT.has(ti) || usedD.has(di)) continue;
+    usedT.add(ti); usedD.add(di);
+    const tr = tracks[ti], d = dets[di], a = anchor(d), dt = Math.max(0.05, (t - tr.t) / 1000);
+    const v = { x: (a.x - tr.p.x) / dt, y: (a.y - tr.p.y) / dt };
+    tr.v = { x: tr.v.x * 0.5 + v.x * 0.5, y: tr.v.y * 0.5 + v.y * 0.5 };
+    tr.prev = { p: tr.p, t: tr.t };
+    tr.p = a; tr.t = t; tr.box = d; tr.missed = 0; tr.hits++;
+    tr.votes[d.cls] = (tr.votes[d.cls] || 0) + 1;
+    tr.cls = Object.keys(tr.votes).reduce((x, y) => (tr.votes[x] >= tr.votes[y] ? x : y));
+    tr.trail.push(a); if (tr.trail.length > 25) tr.trail.shift();
+    checkCrossings(tr);
+  }
+  dets.forEach((d, di) => {
+    if (usedD.has(di)) return;
+    const a = anchor(d);
+    tracks.push({ id: nextId++, p: a, t, v: { x: 0, y: 0 }, box: d, cls: d.cls, votes: { [d.cls]: 1 },
+      missed: 0, hits: 1, trail: [a], prev: null, counted: false, crossA: null, crossB: null, speed: null });
+  });
+  tracks.forEach((tr, i) => { if (!usedT.has(i) && tr.t !== t) tr.missed++; });
+  tracks = tracks.filter((tr) => tr.missed <= 4);
+}
+
+// ===================== Lines, counting & speed =====================
+// Signed side of point p relative to line l, and whether the crossing lies within the segment
+// (a point exactly on the line counts as the positive side, so a crossing is never skipped)
+function side(l, p) { return (l.x2 - l.x1) * (p.y - l.y1) - (l.y2 - l.y1) * (p.x - l.x1) >= 0 ? 1 : -1; }
+function crossTime(l, tr) {
+  if (!tr.prev) return null;
+  const p0 = tr.prev.p, p1 = tr.p, s0 = side(l, p0), s1 = side(l, p1);
+  if (s0 === s1) return null;
+  // intersection of movement segment with the line (parameter u along the movement)
+  const dx = p1.x - p0.x, dy = p1.y - p0.y, lx = l.x2 - l.x1, ly = l.y2 - l.y1;
+  const den = dx * ly - dy * lx;
+  if (Math.abs(den) < 1e-9) return null;
+  const u = ((l.x1 - p0.x) * ly - (l.y1 - p0.y) * lx) / den;
+  const w = ((l.x1 - p0.x) * dy - (l.y1 - p0.y) * dx) / den;
+  if (w < -0.15 || w > 1.15) return null; // crossing must be on the drawn segment (small tolerance)
+  // direction from the actual movement: +1 = down or right, -1 = up or left
+  const vertical = Math.abs(dy) >= Math.abs(dx);
+  const dir = Math.sign(vertical ? dy : dx) || 1;
+  return { t: tr.prev.t + (tr.t - tr.prev.t) * u, dir, label: vertical ? (dir > 0 ? "down" : "up") : (dir > 0 ? "right" : "left") };
+}
+function checkCrossings(tr) {
+  if (tr.hits < 2) return;
+  if (lineA && !tr.crossA) {
+    const c = crossTime(lineA, tr);
+    if (c) { tr.crossA = c; countVehicle(tr, c); maybeSpeed(tr); }
+  }
+  if (lineB && !tr.crossB) {
+    const c = crossTime(lineB, tr);
+    if (c) { tr.crossB = c; maybeSpeed(tr); }
+  }
+}
+function countVehicle(tr, c) {
+  if (tr.counted) return;
+  tr.counted = true;
+  const k = tr.cls;
+  counts[k] = counts[k] || { fwd: 0, back: 0 };
+  counts[k][c.dir > 0 ? "fwd" : "back"]++;
+  events.push({ time: new Date(), id: tr.id, type: k, direction: c.label, speed: "" });
+  renderCounts();
+}
+function maybeSpeed(tr) {
+  if (!tr.crossA || !tr.crossB || tr.speed !== null) return;
+  const dt = Math.abs(tr.crossB.t - tr.crossA.t) / 1000;
+  if (dt < 0.15) return;
+  const kmh = (+$("distM").value / dt) * 3.6;
+  if (kmh > 250) return; // implausible, ignore
+  tr.speed = kmh;
+  speeds.push({ id: tr.id, type: tr.cls, kmh, time: new Date() });
+  const ev = events.find((e) => e.id === tr.id);
+  if (ev) ev.speed = kmh.toFixed(1);
+  renderSpeeds();
+}
+
+// ===================== Heatmap =====================
+function initHeat(w, h) {
+  heatW = Math.ceil(w / 8); heatH = Math.ceil(h / 8);
+  heat = new Float32Array(heatW * heatH);
+  heatCanvas.width = heatW; heatCanvas.height = heatH;
+}
+function addHeat(p) {
+  const cx = p.x / 8, cy = p.y / 8, r = 4;
+  for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(heatH - 1, Math.ceil(cy + r)); y++)
+    for (let x = Math.max(0, Math.floor(cx - r)); x <= Math.min(heatW - 1, Math.ceil(cx + r)); x++) {
+      const d2 = (x - cx) ** 2 + (y - cy) ** 2;
+      heat[y * heatW + x] += Math.exp(-d2 / (2 * (r / 2) ** 2));
+    }
+}
+function heatColor(v) { // v 0..1 -> blue, cyan, green, yellow, red
+  const stops = [[0, 0, 255], [0, 255, 255], [0, 255, 0], [255, 255, 0], [255, 0, 0]];
+  const f = Math.min(0.9999, v) * (stops.length - 1), i = Math.floor(f), t = f - i;
+  return stops[i].map((c, k) => Math.round(c + (stops[i + 1][k] - c) * t));
+}
+function drawHeat() {
+  let max = 0;
+  for (let i = 0; i < heat.length; i++) if (heat[i] > max) max = heat[i];
+  if (max <= 0) return;
+  const im = hctx.createImageData(heatW, heatH);
+  for (let i = 0; i < heat.length; i++) {
+    const v = Math.sqrt(heat[i] / max);
+    if (v < 0.04) continue;
+    const [r, g, b] = heatColor(v);
+    im.data[4 * i] = r; im.data[4 * i + 1] = g; im.data[4 * i + 2] = b; im.data[4 * i + 3] = Math.round(255 * Math.min(1, v * 1.6));
+  }
+  hctx.putImageData(im, 0, 0);
+  ctx.save();
+  ctx.globalAlpha = +$("hmOp").value;
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(heatCanvas, 0, 0, view.width, view.height);
+  ctx.restore();
+}
+
+// ===================== Drawing =====================
+function drawLine(l, color, name) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = Math.max(3, view.width / 350); ctx.setLineDash([14, 8]);
+  ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke();
+  ctx.setLineDash([]);
+  const fs = Math.max(14, view.width / 60);
+  ctx.font = `700 ${fs}px system-ui`; ctx.fillStyle = color;
+  ctx.fillText(name, l.x1 + 6, l.y1 - 8);
+  ctx.restore();
+}
+function render() {
+  const w = view.width, h = view.height;
+  ctx.drawImage(img, 0, 0, w, h);
+  if ($("hmToggle").checked && heat) drawHeat();
+  if (lineA) drawLine(lineA, "#4fd1ff", "A  (count)");
+  if (lineB) drawLine(lineB, "#ff5fa2", "B");
+  const fs = Math.max(13, w / 70), lw = Math.max(2, w / 450), limit = +$("limit").value;
+  ctx.font = `600 ${fs}px system-ui`;
+  for (const tr of tracks) {
+    if (tr.missed > 0) continue;
+    const b = tr.box, color = COLORS[tr.cls];
+    if ($("trailToggle").checked && tr.trail.length > 1) {
+      ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); tr.trail.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = lw;
+    ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1);
+    let label = `#${tr.id} ${tr.cls}`;
+    if (tr.speed !== null) label += ` ${Math.round(tr.speed)} km/h`;
+    const tw = ctx.measureText(label).width + 8, ty = b.y1 > fs + 6 ? b.y1 - fs - 6 : b.y1;
+    ctx.fillStyle = tr.speed !== null && tr.speed > limit ? "#ff6b6b" : color;
+    ctx.fillRect(b.x1, ty, tw, fs + 6);
+    ctx.fillStyle = "#0b0e14"; ctx.fillText(label, b.x1 + 4, ty + fs);
+  }
+  if (drawing && drawPts.length === 1) {
+    ctx.fillStyle = drawing === "A" ? "#4fd1ff" : "#ff5fa2";
+    ctx.beginPath(); ctx.arc(drawPts[0].x, drawPts[0].y, 8, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+// ===================== Panels =====================
+function renderCounts() {
+  const rows = Object.entries(counts).sort((a, b) => (b[1].fwd + b[1].back) - (a[1].fwd + a[1].back));
+  let total = 0;
+  $("countTable").innerHTML = rows.map(([k, c]) => {
+    total += c.fwd + c.back;
+    return `<tr><td><span style="color:${COLORS[k]}">●</span> ${k}</td><td>${c.fwd}</td><td>${c.back}</td><td>${c.fwd + c.back}</td></tr>`;
+  }).join("") || '<tr><td colspan="4" class="empty">No vehicle has crossed line A yet.</td></tr>';
+  $("sTotal").textContent = total;
+}
+function renderSpeeds() {
+  const limit = +$("limit").value;
+  if (!speeds.length) return;
+  $("speedLog").innerHTML = "<table><thead><tr><th>Time</th><th>Vehicle</th><th>km/h</th></tr></thead><tbody>" +
+    speeds.slice(-30).reverse().map((s) =>
+      `<tr><td>${s.time.toLocaleTimeString("en-GB")}</td><td>#${s.id} ${s.type}</td>` +
+      `<td class="${s.kmh > limit ? "fast" : ""}">${s.kmh.toFixed(0)}</td></tr>`).join("") + "</tbody></table>";
+  $("sAvg").textContent = (speeds.reduce((a, s) => a + s.kmh, 0) / speeds.length).toFixed(0);
+}
+function renderLive() {
+  const now = performance.now();
+  detTimes = detTimes.filter((t) => now - t < 3000);
+  $("sDet").textContent = (detTimes.length / 3).toFixed(1) + " detections/s";
+  $("sOn").textContent = tracks.filter((t) => t.missed === 0).length;
+  const mins = (now - startTime) / 60000;
+  $("sRun").textContent = `running ${Math.floor(mins)}:${String(Math.floor((mins * 60) % 60)).padStart(2, "0")}`;
+  const total = +$("sTotal").textContent;
+  $("sRate").textContent = mins > 0.05 ? (total / mins).toFixed(1) : "0";
+}
+
+// ===================== Main loop =====================
+async function loop() {
+  while (running) {
+    if (!paused && img.naturalWidth) {
+      const w = img.naturalWidth, h = img.naturalHeight;
+      if (view.width !== w || view.height !== h) {
+        view.width = w; view.height = h; initHeat(w, h);
+        if (!lineA) lineA = { x1: w * 0.08, y1: h * 0.62, x2: w * 0.92, y2: h * 0.62 };
+        if (!lineB) lineB = { x1: w * 0.08, y1: h * 0.82, x2: w * 0.92, y2: h * 0.82 };
+      }
+      try {
+        const t = performance.now();
+        const dets = await detect(w, h);
+        updateTracks(dets, t);
+        for (const tr of tracks) if (tr.missed === 0) addHeat(tr.p);
+        detTimes.push(performance.now());
+        $("msg").hidden = true;
+      } catch (err) {
+        // On a static page there is no proxy: cameras must allow cross-origin access (CORS)
+        showMsg("This camera does not allow browser access (CORS), so it cannot be analyzed here. Try another MJPEG camera.", true);
+        running = false;
+      }
+      render();
+      renderLive();
+    }
+    await new Promise(requestAnimationFrame);
+  }
+}
+
+function showMsg(text, error = false, spin = false) {
+  const m = $("msg");
+  m.hidden = false; m.className = error ? "error" : "";
+  m.innerHTML = (spin ? '<div class="spinner"></div>' : "") + "<div></div>";
+  m.lastElementChild.textContent = text;
+}
+function loadLines() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("cctvLines:" + $("camUrl").value.trim()) || "null");
+    if (saved) { lineA = saved.A; lineB = saved.B; $("distM").value = saved.dist || $("distM").value; }
+  } catch (_) {}
+}
+function saveLines() {
+  try { localStorage.setItem("cctvLines:" + $("camUrl").value.trim(), JSON.stringify({ A: lineA, B: lineB, dist: +$("distM").value })); } catch (_) {}
+}
+
+$("startBtn").addEventListener("click", async () => {
+  showMsg("Connecting to camera…", false, true);
+  await engineReady;
+  running = false;
+  await new Promise(requestAnimationFrame);
+  tracks = []; lineA = lineB = null; view.width = 1; // force re-init for the new stream
+  loadLines();
+  img.onerror = () => { showMsg("Camera stream not reachable (offline, or it blocks browser access).", true); running = false; };
+  img.src = $("camUrl").value.trim();
+  startTime = performance.now(); running = true; paused = false;
+  $("pauseBtn").disabled = false; $("pauseBtn").textContent = "Pause";
+  loop();
+});
+$("pauseBtn").addEventListener("click", () => { paused = !paused; $("pauseBtn").textContent = paused ? "Resume" : "Pause"; });
+$("resetBtn").addEventListener("click", () => {
+  counts = {}; events = []; speeds = []; startTime = performance.now();
+  tracks.forEach((t) => { t.counted = true; }); // vehicles already past the line are not re-counted
+  renderCounts(); $("speedLog").innerHTML = '<div class="empty">Speeds appear when vehicles cross A and B.</div>'; $("sAvg").textContent = "–";
+});
+$("hmReset").addEventListener("click", () => heat && heat.fill(0));
+$("hmOp").addEventListener("input", (e) => ($("hmOpVal").textContent = (+e.target.value).toFixed(2)));
+$("conf").addEventListener("input", (e) => ($("confVal").textContent = (+e.target.value).toFixed(2)));
+$("distM").addEventListener("change", saveLines);
+
+// Line drawing: click two points on the video
+function startDraw(which) {
+  drawing = which; drawPts = [];
+  view.classList.add("drawing");
+  $("drawHint").hidden = false;
+  $("drawHint").textContent = `Line ${which}: click the start point on the video`;
+  $("drawA").classList.toggle("active", which === "A"); $("drawB").classList.toggle("active", which === "B");
+}
+$("drawA").addEventListener("click", () => startDraw("A"));
+$("drawB").addEventListener("click", () => startDraw("B"));
+view.addEventListener("click", (e) => {
+  if (!drawing) return;
+  const r = view.getBoundingClientRect();
+  drawPts.push({ x: (e.clientX - r.left) * (view.width / r.width), y: (e.clientY - r.top) * (view.height / r.height) });
+  if (drawPts.length === 1) { $("drawHint").textContent = `Line ${drawing}: click the end point`; return; }
+  const l = { x1: drawPts[0].x, y1: drawPts[0].y, x2: drawPts[1].x, y2: drawPts[1].y };
+  if (drawing === "A") lineA = l; else lineB = l;
+  tracks.forEach((t) => { t.crossA = t.crossB = null; t.speed = null; });
+  saveLines();
+  drawing = null; view.classList.remove("drawing"); $("drawHint").hidden = true;
+  $("drawA").classList.remove("active"); $("drawB").classList.remove("active");
+  if (paused || !running) render();
+});
+
+// CSV export of all counted vehicles
+$("csvBtn").addEventListener("click", () => {
+  const rows = [["time", "vehicle_id", "type", "direction", "speed_kmh"]].concat(
+    events.map((e) => [e.time.toISOString(), e.id, e.type, e.direction, e.speed]));
+  const blob = new Blob([rows.map((r) => r.join(",")).join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `traffic_log_${Date.now()}.csv`; a.click();
+});
+renderCounts();
+</script>
+</body>
+</html>
