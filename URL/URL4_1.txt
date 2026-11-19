@@ -1,2 +1,2 @@
-Ollama
-https://drluarn.github.io/
+Ollama - local multimodal model gemma3:4b recognizes and describes an uploaded picture
+https://ollama.com/library/gemma3
