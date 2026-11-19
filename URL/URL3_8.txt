@@ -1,0 +1,2 @@
+Extra Credit #3-8 - YOLO26 nano multi-task webcam app: detection, segmentation, semantic, depth, classification, pose, OBB
+https://paelus.github.io/yolo-tasks/

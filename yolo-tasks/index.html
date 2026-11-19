@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOLO26 Multi-Task Webcam</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #141923; --panel2: #1b2230; --border: #283043;
+    --text: #e8ecf6; --muted: #8f9ab5; --accent: #7c9cff; --ok: #5ee08a; --warn: #ffb020; --bad: #ff6b6b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 18px; font-weight: 650; margin-right: auto; }
+  header h1 span { color: var(--accent); }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  select, button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel2);
+    color: var(--text); font-size: 14px; font-weight: 600; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0a1030; }
+  label.toggle { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  main { padding: 14px 20px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; }
+  @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+  .stage { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+    aspect-ratio: 4 / 3; }
+  #view { width: 100%; height: 100%; display: block; object-fit: contain; }
+  #msg { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
+    text-align: center; padding: 24px; font-size: 15px; color: var(--muted); background: rgba(0,0,0,0.6); }
+  #msg.error { color: var(--bad); }
+  #loading { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(20,25,35,0.92);
+    border: 1px solid var(--accent); padding: 6px 14px; border-radius: 999px; font-size: 13px; display: flex; gap: 8px; align-items: center; }
+  .spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite; }
+  #msg .spinner { width: 30px; height: 30px; border-width: 3px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .card + .card { margin-top: 14px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 10px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { text-align: right; font-variant-numeric: tabular-nums; }
+  #backendVal.gpu { color: var(--ok); } #backendVal.fallback { color: var(--warn); }
+  #info { font-size: 13px; line-height: 1.6; }
+  #info .row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+  #info .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  #info .bar { height: 8px; background: var(--accent); border-radius: 4px; margin-top: 2px; }
+  #info .n { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .note { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 8px; }
+  #notice { font-size: 12px; color: var(--warn); margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span>YOLO26n</span> Multi-Task Webcam</h1>
+  <div class="controls">
+    <select id="task" aria-label="Task">
+      <option value="detect">Detection (yolo26n)</option>
+      <option value="segment">Instance segmentation (yolo26n-seg)</option>
+      <option value="semantic">Semantic segmentation (yolo26n-sem)</option>
+      <option value="depth">Depth estimation (yolo26n-depth)</option>
+      <option value="classify">Classification (yolo26n-cls)</option>
+      <option value="pose">Pose estimation (yolo26n-pose)</option>
+      <option value="obb">Oriented boxes / OBB (yolo26n-obb)</option>
+    </select>
+    <select id="skip" aria-label="Run inference on">
+      <option value="1">every frame</option>
+      <option value="2" selected>every 2nd frame</option>
+      <option value="3">every 3rd frame</option>
+    </select>
+    <label class="toggle"><input type="checkbox" id="gpu"> Use GPU (WebGPU)</label>
+    <label class="toggle"><input type="checkbox" id="mirror" checked> Mirror</label>
+    <button class="primary" id="camBtn">Start webcam</button>
+  </div>
+</header>
+<p style="padding:10px 20px 0;color:var(--muted);font-size:13px;line-height:1.5">
+  Extra Credit #3-8 · MMI5194 · Seven YOLO26 nano models (exported to ONNX at 320 px) run entirely in your browser with
+  ONNX Runtime Web – your webcam image never leaves your device. Each model (6–21 MB) downloads the first time you pick its task.
+  Tip: turn on “Use GPU (WebGPU)” for more speed.</p>
+
+<main>
+  <div class="stage">
+    <canvas id="view" width="640" height="480"></canvas>
+    <div id="msg">Press “Start webcam” to begin.</div>
+    <div id="loading" hidden><div class="spinner"></div><span>Loading model…</span></div>
+  </div>
+  <aside>
+    <div class="card">
+      <h2>Status</h2>
+      <dl class="kv">
+        <dt>Task</dt><dd id="taskVal">–</dd>
+        <dt>Model</dt><dd id="modelVal">–</dd>
+        <dt>Backend</dt><dd id="backendVal">–</dd>
+        <dt>Video FPS</dt><dd id="fpsVal">0</dd>
+        <dt>Inference</dt><dd id="infVal">–</dd>
+        <dt>Input size</dt><dd>320 × 320</dd>
+      </dl>
+      <div id="notice" hidden></div>
+    </div>
+    <div class="card">
+      <h2 id="infoTitle">Results</h2>
+      <div id="info"><span class="note">No results yet.</span></div>
+    </div>
+  </aside>
+</main>
+<video id="video" playsinline muted hidden></video>
+
+<!-- The WebGPU build of ONNX Runtime Web also contains the WASM backend -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.webgpu.min.js" crossorigin="anonymous"></script>
+<script>
+// ===================== Setup =====================
+const SIZE = 320;
+const $ = (id) => document.getElementById(id);
+const video = $("video"), view = $("view"), ctx = view.getContext("2d");
+const prep = document.createElement("canvas"); prep.width = prep.height = SIZE;
+const pctx = prep.getContext("2d", { willReadFrequently: true });
+const layer = document.createElement("canvas"), lctx = layer.getContext("2d"); // per-pixel overlays
+
+let META = null;
+const sessions = {};          // "task|backend" -> InferenceSession (each model loads on first use)
+let stream = null, running = false, busy = false, frameNo = 0;
+let result = null;            // last result {task, ...}
+const failed = {};            // task -> error text (that task is skipped, the webcam keeps running)
+let fps = 0, lastFrame = performance.now(), infMs = 0;
+
+const PALETTE = ["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#30b0ff","#5856d6","#af52de","#ff2d55","#a2845e"];
+const color = (i) => PALETTE[i % PALETTE.length];
+// Cityscapes colors for the 19 semantic classes
+const CITYSCAPES = [[128,64,128],[244,35,232],[70,70,70],[102,102,156],[190,153,153],[153,153,153],[250,170,30],[220,220,0],
+  [107,142,35],[152,251,152],[70,130,180],[220,20,60],[255,0,0],[0,0,142],[0,0,70],[0,60,100],[0,80,100],[0,0,230],[119,11,32]];
+const SKELETON = [[15,13],[13,11],[16,14],[14,12],[11,12],[5,11],[6,12],[5,6],[5,7],[6,8],[7,9],[8,10],[1,2],[0,1],[0,2],[1,3],[2,4],[3,5],[4,6]];
+
+function showMsg(text, { error = false, spin = false } = {}) {
+  const m = $("msg");
+  m.hidden = !text;
+  m.className = error ? "error" : "";
+  m.innerHTML = (spin ? '<div class="spinner"></div>' : "") + "<div></div>";
+  m.lastElementChild.textContent = text || "";
+}
+
+function unsupported() {
+  if (!window.WebAssembly) return "This browser does not support WebAssembly, which is needed to run the models. Please use a current Chrome, Edge, Firefox or Safari.";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return "This browser cannot access a webcam (getUserMedia is missing). Open the page via http://localhost or https in a current browser.";
+  return null;
+}
+
+// ===================== Model loading =====================
+ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/";
+ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
+
+async function getSession(task) {
+  const wantGpu = $("gpu").checked;
+  if (wantGpu) {
+    const key = task + "|webgpu";
+    if (sessions[key]) return { session: sessions[key], backend: "webgpu" };
+    try {
+      if (!navigator.gpu) throw new Error("WebGPU is not available in this browser");
+      sessions[key] = await ort.InferenceSession.create("models/" + META[task].file, { executionProviders: ["webgpu"] });
+      return { session: sessions[key], backend: "webgpu" };
+    } catch (err) {
+      notice("WebGPU failed (" + (err.message || err) + "), using WASM instead.");
+    }
+  }
+  const key = task + "|wasm";
+  if (!sessions[key]) {
+    sessions[key] = await ort.InferenceSession.create("models/" + META[task].file, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
+  }
+  return { session: sessions[key], backend: wantGpu ? "wasm-fallback" : "wasm" };
+}
+
+function notice(text) { $("notice").hidden = !text; $("notice").textContent = text || ""; }
+
+// ===================== Pre-processing =====================
+function letterbox(w, h) {
+  const s = Math.min(SIZE / w, SIZE / h), nw = Math.round(w * s), nh = Math.round(h * s);
+  const px = Math.floor((SIZE - nw) / 2), py = Math.floor((SIZE - nh) / 2);
+  pctx.fillStyle = "rgb(114,114,114)"; pctx.fillRect(0, 0, SIZE, SIZE);
+  pctx.drawImage(video, px, py, nw, nh);
+  const { data } = pctx.getImageData(0, 0, SIZE, SIZE), area = SIZE * SIZE, input = new Float32Array(3 * area);
+  for (let i = 0, j = 0; i < area; i++, j += 4) {
+    input[i] = data[j] / 255; input[i + area] = data[j + 1] / 255; input[i + 2 * area] = data[j + 2] / 255;
+  }
+  return { tensor: new ort.Tensor("float32", input, [1, 3, SIZE, SIZE]), s, px, py, nw, nh };
+}
+
+// ===================== Post-processing =====================
+// Raw heads (segment/pose/obb) give 2100 candidates as [channels, anchors]; keep the best and run NMS.
+function candidates(d, n, nClasses, conf) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    let best = 0, cls = 0;
+    for (let c = 0; c < nClasses; c++) { const v = d[(4 + c) * n + i]; if (v > best) { best = v; cls = c; } }
+    if (best < conf) continue;
+    const cx = d[i], cy = d[n + i], w = d[2 * n + i], h = d[3 * n + i];
+    out.push({ i, score: best, cls, x1: cx - w / 2, y1: cy - h / 2, x2: cx + w / 2, y2: cy + h / 2 });
+  }
+  return out;
+}
+function iou(a, b) {
+  const ix = Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1)), iy = Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+  const inter = ix * iy;
+  return inter / ((a.x2 - a.x1) * (a.y2 - a.y1) + (b.x2 - b.x1) * (b.y2 - b.y1) - inter + 1e-9);
+}
+function nms(boxes, thr = 0.5, max = 30) {
+  boxes.sort((a, b) => b.score - a.score);
+  const keep = [];
+  for (const b of boxes) {
+    if (keep.every((k) => k.cls !== b.cls || iou(k, b) < thr)) keep.push(b);
+    if (keep.length >= max) break;
+  }
+  return keep;
+}
+const toFrame = (lb, x, y) => [(x - lb.px) / lb.s, (y - lb.py) / lb.s];
+
+function postprocess(task, out, lb) {
+  const m = META[task], names = m.names, conf = 0.35;
+  const o0 = out[0], d = o0.data;
+  if (task === "detect") {
+    const boxes = [];
+    for (let i = 0; i < d.length; i += 6) {
+      if (d[i + 4] < conf) continue;
+      const [x1, y1] = toFrame(lb, d[i], d[i + 1]), [x2, y2] = toFrame(lb, d[i + 2], d[i + 3]);
+      boxes.push({ x1, y1, x2, y2, score: d[i + 4], cls: d[i + 5] | 0 });
+    }
+    return { task, boxes };
+  }
+  if (task === "segment") {
+    const n = o0.dims[2], nc = names.length;
+    const dets = nms(candidates(d, n, nc, conf));
+    const proto = out[1].data, P = 80, area = P * P, mask = new ImageData(P, P);
+    dets.forEach((b, k) => {
+      const coef = []; for (let c = 0; c < 32; c++) coef.push(d[(4 + nc + c) * n + b.i]);
+      const rgb = color(b.cls).match(/\w\w/g).map((h) => parseInt(h, 16));
+      const bx1 = Math.max(0, Math.floor(b.x1 / 4)), by1 = Math.max(0, Math.floor(b.y1 / 4));
+      const bx2 = Math.min(P, Math.ceil(b.x2 / 4)), by2 = Math.min(P, Math.ceil(b.y2 / 4));
+      for (let y = by1; y < by2; y++) for (let x = bx1; x < bx2; x++) {
+        const p = y * P + x; let v = 0;
+        for (let c = 0; c < 32; c++) v += coef[c] * proto[c * area + p];
+        if (v > 0) { // sigmoid(v) > 0.5
+          mask.data[4 * p] = rgb[0]; mask.data[4 * p + 1] = rgb[1]; mask.data[4 * p + 2] = rgb[2]; mask.data[4 * p + 3] = 140;
+        }
+      }
+    });
+    const boxes = dets.map((b) => { const [x1, y1] = toFrame(lb, b.x1, b.y1), [x2, y2] = toFrame(lb, b.x2, b.y2); return { x1, y1, x2, y2, score: b.score, cls: b.cls }; });
+    return { task, boxes, mask, maskScale: 4 };
+  }
+  if (task === "semantic") {
+    const img = new ImageData(SIZE, SIZE), present = {};
+    for (let p = 0; p < SIZE * SIZE; p++) {
+      const c = d[p], col = CITYSCAPES[c] || [0, 0, 0];
+      img.data[4 * p] = col[0]; img.data[4 * p + 1] = col[1]; img.data[4 * p + 2] = col[2]; img.data[4 * p + 3] = 150;
+    }
+    // class shares are counted inside the real picture only (not the gray letterbox padding)
+    for (let y = lb.py; y < lb.py + lb.nh; y++) for (let x = lb.px; x < lb.px + lb.nw; x++) {
+      const c = d[y * SIZE + x]; present[c] = (present[c] || 0) + 1;
+    }
+    return { task, mask: img, maskScale: 1, present, total: lb.nw * lb.nh };
+  }
+  if (task === "depth") {
+    // larger value = farther away; normalize inside the letterboxed picture only
+    let min = Infinity, max = -Infinity;
+    for (let y = lb.py; y < lb.py + lb.nh; y++) for (let x = lb.px; x < lb.px + lb.nw; x++) {
+      const v = d[y * SIZE + x]; if (v < min) min = v; if (v > max) max = v;
+    }
+    const img = new ImageData(SIZE, SIZE);
+    for (let p = 0; p < SIZE * SIZE; p++) {
+      const t = 1 - (d[p] - min) / (max - min + 1e-6); // 1 = near
+      const [r, g, b] = inferno(t);
+      img.data[4 * p] = r; img.data[4 * p + 1] = g; img.data[4 * p + 2] = b; img.data[4 * p + 3] = 255;
+    }
+    return { task, mask: img, maskScale: 1, opaque: true, range: [min, max] };
+  }
+  if (task === "classify") {
+    const top = Array.from(d).map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 5);
+    return { task, top: top.map(([p, i]) => ({ name: names[i].replace(/_/g, " "), p })) };
+  }
+  if (task === "pose") {
+    const n = o0.dims[2];
+    const dets = nms(candidates(d, n, 1, conf), 0.5, 10).map((b) => {
+      const kpts = [];
+      for (let k = 0; k < 17; k++) {
+        const [x, y] = toFrame(lb, d[(5 + 3 * k) * n + b.i], d[(6 + 3 * k) * n + b.i]);
+        kpts.push({ x, y, v: d[(7 + 3 * k) * n + b.i] });
+      }
+      const [x1, y1] = toFrame(lb, b.x1, b.y1), [x2, y2] = toFrame(lb, b.x2, b.y2);
+      return { x1, y1, x2, y2, score: b.score, cls: 0, kpts };
+    });
+    return { task, boxes: dets };
+  }
+  if (task === "obb") {
+    const n = o0.dims[2], nc = names.length;
+    const dets = nms(candidates(d, n, nc, 0.25), 0.4, 50).map((b) => {
+      const cx = (b.x1 + b.x2) / 2, cy = (b.y1 + b.y2) / 2, w = b.x2 - b.x1, h = b.y2 - b.y1, a = d[(4 + nc) * n + b.i];
+      const cos = Math.cos(a), sin = Math.sin(a);
+      const pts = [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]]
+        .map(([x, y]) => toFrame(lb, cx + x * cos - y * sin, cy + x * sin + y * cos));
+      return { pts, score: b.score, cls: b.cls };
+    });
+    return { task, obbs: dets };
+  }
+}
+function inferno(t) { // compact inferno-like colormap
+  const s = [[0,0,4],[40,11,84],[101,21,110],[159,42,99],[212,72,66],[245,125,21],[250,193,39],[252,255,164]];
+  const f = Math.max(0, Math.min(0.9999, t)) * (s.length - 1), i = Math.floor(f), u = f - i;
+  return s[i].map((c, k) => Math.round(c + (s[i + 1][k] - c) * u));
+}
+
+// ===================== Inference loop =====================
+async function infer(task) {
+  busy = true;
+  try {
+    if (!sessions[task + "|wasm"] && !sessions[task + "|webgpu"]) $("loading").hidden = false;
+    const { session, backend } = await getSession(task);
+    $("loading").hidden = true;
+    $("backendVal").textContent = backend === "webgpu" ? "WebGPU (GPU)" : backend === "wasm-fallback" ? "WASM (fallback)" :
+      `WASM (${ort.env.wasm.numThreads} thread${ort.env.wasm.numThreads > 1 ? "s" : ""})`;
+    $("backendVal").className = backend === "webgpu" ? "gpu" : backend === "wasm-fallback" ? "fallback" : "";
+    if (task !== $("task").value || !running) return; // user switched while loading
+    const lb = letterbox(video.videoWidth, video.videoHeight);
+    const t0 = performance.now();
+    const res = await session.run({ [session.inputNames[0]]: lb.tensor });
+    infMs = infMs ? infMs * 0.8 + (performance.now() - t0) * 0.2 : performance.now() - t0;
+    const out = session.outputNames.map((n) => res[n]);
+    result = Object.assign(postprocess(task, out, lb), { lb });
+    renderInfo();
+  } catch (err) {
+    $("loading").hidden = true;
+    console.error(err);
+    failed[task] = `Model failed to load or run (${META[task].model}): ${err.message || err}. Choose another task.`;
+    if (task === $("task").value) showMsg(failed[task], { error: true });
+  } finally {
+    busy = false;
+  }
+}
+
+function frame(now) {
+  if (!running) return;
+  fps = fps * 0.9 + (1000 / Math.max(1, now - lastFrame)) * 0.1;
+  lastFrame = now;
+  frameNo++;
+  const task = $("task").value;
+  if (!busy && !failed[task] && frameNo % +$("skip").value === 0) infer(task);
+  draw(task);
+  $("fpsVal").textContent = Math.round(fps);
+  $("infVal").textContent = infMs ? `${Math.round(infMs)} ms` : "–";
+  requestAnimationFrame(frame);
+}
+
+// ===================== Drawing =====================
+function draw(task) {
+  const w = video.videoWidth, h = video.videoHeight;
+  if (!w) return;
+  if (view.width !== w || view.height !== h) { view.width = w; view.height = h; }
+  const mirror = $("mirror").checked;
+  const X = (x) => (mirror ? w - x : x);
+  ctx.save();
+  if (mirror) { ctx.translate(w, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(video, 0, 0, w, h);
+  // per-pixel overlays (masks, semantic map, depth) are drawn inside the mirrored transform
+  if (result && result.task === task && result.mask) {
+    const lb = result.lb, k = result.maskScale;
+    layer.width = result.mask.width; layer.height = result.mask.height;
+    lctx.putImageData(result.mask, 0, 0);
+    ctx.globalAlpha = result.opaque ? 0.85 : 1;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(layer, lb.px / k, lb.py / k, lb.nw / k, lb.nh / k, 0, 0, w, h);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+  if (!result || result.task !== task) return;
+
+  const fs = Math.max(13, Math.round(w / 48)), lw = Math.max(2, w / 320);
+  ctx.font = `600 ${fs}px system-ui, sans-serif`; ctx.lineWidth = lw;
+  const label = (text, x, y, col) => {
+    const tw = ctx.measureText(text).width + 8, ty = y > fs + 6 ? y - fs - 6 : y;
+    ctx.fillStyle = col; ctx.fillRect(x, ty, tw, fs + 6);
+    ctx.fillStyle = "#0b0e14"; ctx.fillText(text, x + 4, ty + fs);
+  };
+  const names = META[task].names;
+  for (const b of result.boxes || []) {
+    const x1 = Math.min(X(b.x1), X(b.x2)), x2 = Math.max(X(b.x1), X(b.x2)), col = task === "pose" ? "#30b0ff" : color(b.cls);
+    ctx.strokeStyle = col; ctx.strokeRect(x1, b.y1, x2 - x1, b.y2 - b.y1);
+    label(`${names[b.cls]} ${Math.round(b.score * 100)}%`, x1, b.y1, col);
+    if (b.kpts) {
+      ctx.strokeStyle = "#5ee08a"; ctx.lineWidth = lw * 1.5;
+      for (const [a, c] of SKELETON) {
+        const p = b.kpts[a], q = b.kpts[c];
+        if (p.v < 0.5 || q.v < 0.5) continue;
+        ctx.beginPath(); ctx.moveTo(X(p.x), p.y); ctx.lineTo(X(q.x), q.y); ctx.stroke();
+      }
+      ctx.fillStyle = "#ffcc00";
+      for (const p of b.kpts) if (p.v >= 0.5) { ctx.beginPath(); ctx.arc(X(p.x), p.y, lw * 2.2, 0, Math.PI * 2); ctx.fill(); }
+      ctx.lineWidth = lw;
+    }
+  }
+  for (const o of result.obbs || []) {
+    const col = color(o.cls);
+    ctx.strokeStyle = col; ctx.beginPath();
+    o.pts.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), y) : ctx.moveTo(X(x), y)));
+    ctx.closePath(); ctx.stroke();
+    const top = o.pts.reduce((a, p) => (p[1] < a[1] ? p : a));
+    label(`${names[o.cls]} ${Math.round(o.score * 100)}%`, X(top[0]), top[1], col);
+  }
+  if (task === "classify" && result.top) {
+    const t = result.top[0];
+    label(`${t.name} ${Math.round(t.p * 100)}%`, 12, fs + 18, "#7c9cff");
+  }
+}
+
+// ===================== Side panel =====================
+function renderInfo() {
+  const r = result, box = $("info"), names = META[r.task].names;
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  if (r.task === "classify") {
+    $("infoTitle").textContent = "Top-5 ImageNet classes";
+    box.innerHTML = r.top.map((t) => `<div>${esc(t.name)} <span class="n" style="float:right">${(t.p * 100).toFixed(1)}%</span>
+      <div class="bar" style="width:${Math.max(2, t.p * 100)}%"></div></div>`).join("");
+  } else if (r.task === "semantic") {
+    $("infoTitle").textContent = "Classes in view (Cityscapes)";
+    const total = r.total;
+    box.innerHTML = Object.entries(r.present).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([c, n]) => {
+      const col = CITYSCAPES[c] || [0, 0, 0];
+      return `<div class="row"><span class="sw" style="background:rgb(${col})"></span>${esc(names[c] || "?")}<span class="n">${Math.round(100 * n / total)}%</span></div>`;
+    }).join("") + '<p class="note">Trained on street scenes, so indoor views map to the closest street classes.</p>';
+  } else if (r.task === "depth") {
+    $("infoTitle").textContent = "Depth";
+    box.innerHTML = `<div class="row"><span class="sw" style="background:rgb(${inferno(1)})"></span>near</div>
+      <div class="row"><span class="sw" style="background:rgb(${inferno(0)})"></span>far</div>
+      <p class="note">Relative depth from a single image (model range ${r.range[0].toFixed(2)}–${r.range[1].toFixed(2)}).</p>`;
+  } else {
+    const items = r.boxes || r.obbs || [];
+    $("infoTitle").textContent = r.task === "pose" ? "People" : "Objects";
+    const counts = {};
+    items.forEach((b) => (counts[b.cls] = (counts[b.cls] || 0) + 1));
+    box.innerHTML = Object.keys(counts).length
+      ? Object.entries(counts).map(([c, n]) => `<div class="row"><span class="sw" style="background:${r.task === "pose" ? "#30b0ff" : color(+c)}"></span>${esc(names[c])}<span class="n">${n}</span></div>`).join("")
+      : '<span class="note">Nothing found right now.</span>';
+    if (r.task === "obb") box.innerHTML += '<p class="note">OBB is trained on aerial images (DOTA): point the camera at a photo of an airport, harbor or parking lot.</p>';
+  }
+}
+
+// ===================== Camera & controls =====================
+async function startCam() {
+  const why = unsupported();
+  if (why) return showMsg(why, { error: true });
+  showMsg("Starting webcam…", { spin: true });
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+  } catch (err) {
+    const text = err.name === "NotAllowedError" ? "Camera access was denied. Allow the camera in the address bar and press “Start webcam” again."
+      : err.name === "NotFoundError" || err.name === "OverconstrainedError" ? "No camera was found. Connect a webcam and try again."
+      : err.name === "NotReadableError" ? "The camera is in use by another app (e.g. Teams or another tab). Close it and try again."
+      : "Could not start the camera: " + err.message;
+    return showMsg(text, { error: true });
+  }
+  video.srcObject = stream;
+  await video.play();
+  showMsg("");
+  running = true;
+  $("camBtn").textContent = "Stop webcam";
+  updateTaskLabels();
+  requestAnimationFrame(frame);
+}
+function stopCam() {
+  running = false;
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+  stream = null; result = null;
+  $("camBtn").textContent = "Start webcam";
+  showMsg("Webcam stopped.");
+}
+function updateTaskLabels() {
+  const t = $("task").value;
+  $("taskVal").textContent = $("task").selectedOptions[0].textContent.split(" (")[0];
+  $("modelVal").textContent = META ? META[t].model : "–";
+}
+
+$("camBtn").addEventListener("click", () => (running ? stopCam() : startCam()));
+$("task").addEventListener("change", () => {
+  updateTaskLabels();
+  $("info").innerHTML = '<span class="note">Waiting for the first result…</span>';
+  const err = failed[$("task").value];
+  if (running) showMsg(err || "", { error: !!err });
+});
+$("gpu").addEventListener("change", () => notice(""));
+
+(async function init() {
+  const why = unsupported();
+  if (why) { showMsg(why, { error: true }); $("camBtn").disabled = true; return; }
+  try {
+    // models sit in ./models next to this page, so it works on GitHub Pages without a server
+    META = await (await fetch("models/tasks-meta.json")).json();
+  } catch (err) {
+    showMsg("Could not load the model list (models/tasks-meta.json). Check your internet connection and reload.", { error: true });
+    $("camBtn").disabled = true;
+    return;
+  }
+  updateTaskLabels();
+  $("backendVal").textContent = `WASM (${ort.env.wasm.numThreads} thread${ort.env.wasm.numThreads > 1 ? "s" : ""})`;
+})();
+</script>
+</body>
+</html>
