@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Miner Skill</title>
+<meta name="description" content="review-miner: my own Google Gemini skill that turns raw customer reviews into a one-page Voice-of-Customer report.">
+<style>
+  :root{--bg:#f6f5f2;--card:#fff;--ink:#16202a;--muted:#5b6670;--line:#e3e0d8;--accent:#1a5fb4;--accent-soft:#e6eef9;--good:#1e8e5a;--bad:#c4372f;}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121416;--card:#1b1f24;--ink:#e8ebee;--muted:#9aa4ae;--line:#2c323a;--accent:#8ab4f8;--accent-soft:#1d2a3d;--good:#5cc98f;--bad:#f28b82;}}
+  :root[data-theme="dark"]{--bg:#121416;--card:#1b1f24;--ink:#e8ebee;--muted:#9aa4ae;--line:#2c323a;--accent:#8ab4f8;--accent-soft:#1d2a3d;--good:#5cc98f;--bad:#f28b82;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:44px 16px 72px}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.12;margin:14px 0 10px}
+  h2{font-size:24px;line-height:1.25;margin:48px 0 12px}
+  h3{font-size:18px;margin:0 0 6px}
+  p{margin:0 0 14px}
+  .lead{font-size:19px;color:var(--muted);max-width:760px}
+  .muted{color:var(--muted)}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:var(--accent-soft);padding:1px 6px;border-radius:5px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card p{margin:0;color:var(--muted);font-size:15.5px}
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .vs .card h3{display:flex;gap:8px;align-items:center}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  ul.clean{margin:0;padding-left:20px;color:var(--muted);font-size:15.5px}
+  ul.clean li{margin:4px 0}
+  ol.steps{list-style:none;padding:0;margin:16px 0 0;counter-reset:s;display:grid;gap:10px}
+  ol.steps li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 62px;position:relative}
+  ol.steps li::before{content:counter(s);position:absolute;left:18px;top:14px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--card);font-weight:700;display:grid;place-items:center;font-size:15px}
+  ol.steps li b{display:block}
+  ol.steps li span{color:var(--muted);font-size:15.5px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi b{display:block;font-size:26px;line-height:1.2}
+  .kpi span{font-size:14px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:15px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  .tablewrap{overflow-x:auto}
+  figure{margin:18px 0 0}
+  figure img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);display:block}
+  figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-top:14px}
+  summary{cursor:pointer;font-weight:700}
+  pre{white-space:pre-wrap;font:13.5px/1.55 ui-monospace,Consolas,monospace;color:var(--ink);margin:12px 0 0}
+  a{color:var(--accent)}
+  .btn{display:inline-block;background:var(--accent);color:var(--card);text-decoration:none;font-weight:700;padding:10px 18px;border-radius:999px;margin:6px 8px 0 0}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+  footer{margin-top:56px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+  @media (max-width:640px){.vs{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <span class="eyebrow">Assignment #4-8 · Extra credit · Google Gemini Skill</span>
+  <h1>review-miner: from 40 customer reviews to 3 decisions</h1>
+  <p class="lead">I designed my own Gemini skill that does the work of a Voice-of-Customer analyst. You give it a pile of raw customer reviews, in any format and any language. It gives back a one-page report: what customers love, what hurts, real quotes as evidence, charts, and the three things the team should fix first.</p>
+
+  <h2>Why this skill is useful</h2>
+  <div class="vs">
+    <div class="card">
+      <h3><span class="dot" style="background:var(--bad)"></span>Without the skill</h3>
+      <ul class="clean">
+        <li>Someone reads every review by hand. For 40 reviews that is about an hour, for 400 it is a day.</li>
+        <li>The result depends on what the reader remembers. A few loud reviews shape the picture.</li>
+        <li>Reviews in German and English get summarized differently, or not at all.</li>
+        <li>The outcome is "people complain about the battery", with no numbers and no priority.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="background:var(--good)"></span>With review-miner</h3>
+      <ul class="clean">
+        <li>One prompt and one file. The same structure every time, so weeks can be compared.</li>
+        <li>Every review is counted. Each theme gets its number of mentions and its share of negatives.</li>
+        <li>Mixed languages are handled; non-English quotes are translated next to the original.</li>
+        <li>It ends with ranked actions, an owner and the expected impact, so the meeting can decide.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Who would use it</h2>
+  <div class="cards">
+    <div class="card"><h3>Marketing</h3><p>Find the claims customers really care about and the words they use, for ads, landing pages and FAQs.</p></div>
+    <div class="card"><h3>Product</h3><p>See which problems hurt most, backed by counts and quotes, before planning the next release.</p></div>
+    <div class="card"><h3>Customer service</h3><p>Spot recurring issues early, e.g. after an update, and prepare answers for them.</p></div>
+    <div class="card"><h3>Small businesses</h3><p>A café or online shop can analyse its Google or shop reviews without an analyst.</p></div>
+  </div>
+
+  <h2>How it works</h2>
+  <p class="muted">The skill is a set of written instructions saved in Gemini (Customize → Skills). It is used by typing <code>@review-miner</code> in a chat and attaching the reviews. The instructions make Gemini follow the same steps every time:</p>
+  <ol class="steps">
+    <li><b>Input check</b><span>Finds the review text, star rating, date and channel columns. Reports in one line how many reviews there are, the date range, the languages and the average rating.</span></li>
+    <li><b>Sentiment</b><span>Classifies every review as positive, neutral or negative from its text, and uses the stars as a cross-check. Reviews where text and stars disagree are flagged.</span></li>
+    <li><b>Themes</b><span>Groups the reviews into 5–8 themes (e.g. battery, app, price, service). Counts mentions, share of reviews and share of negatives per theme.</span></li>
+    <li><b>Trend</b><span>Compares the recent period with the one before: what got better, what got worse.</span></li>
+    <li><b>Evidence</b><span>Picks 1–2 real quotes per theme, word for word, with an English translation. Quotes are never invented or edited, and every number must come from the data.</span></li>
+    <li><b>Report</b><span>Headline, KPI table, charts, theme table, top 3 "love" and top 3 "hurts", 3 prioritized actions with owner and impact, and the limits of the data.</span></li>
+  </ol>
+
+  <h2>Test run: 40 pilot reviews of "Sehwerk" smart glasses</h2>
+  <p>To test the skill I used 40 made-up reviews of "Sehwerk", the fictional smart glasses from assignment #4-7. They are mixed German and English and come from three channels (optician survey, online shop, app store). I computed the correct numbers beforehand, and Gemini's report matched them.</p>
+  <div class="kpis">
+    <div class="kpi"><b>40</b><span>reviews, Oct 5–30, 2026</span></div>
+    <div class="kpi"><b>3.40 / 5</b><span>average rating</span></div>
+    <div class="kpi"><b>52.5 %</b><span>positive (4–5 stars)</span></div>
+    <div class="kpi"><b>30 %</b><span>negative (1–2 stars)</span></div>
+  </div>
+  <p><b>Gemini's headline:</b> pilot customers love the live captions, the camera-free privacy and the optician fitting, but 3–4 hours of battery life and unstable Android/Bluetooth pairing block full-day use at work.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Priority</th><th>Action the skill recommended</th><th>Owner</th><th>Why first</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Extend caption battery life to a full workday, or add a power-saving caption mode</td><td>Product / hardware</td><td>7 mentions, 100 % negative; the main reason the €899 price feels too high</td></tr>
+      <tr><td>2</td><td>Fix Android/Samsung Bluetooth pairing and replace the 40-minute setup with a guided wizard</td><td>Mobile engineering</td><td>Top software complaint, behind the low 2.89-star app store score</td></tr>
+      <tr><td>3</td><td>Cut prescription-lens delivery to ≤ 5 days and add a visible "mic on" light</td><td>Operations / design</td><td>Removes the wait right after purchase and the worry of being recorded</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="muted" style="margin-top:12px">The skill also picked up a subtle point: an app update during the pilot fixed the crashes, while the battery complaints did not improve. A quick manual read would easily miss that.</p>
+  <figure>
+    <img src="../pic/unit4_8.jpg" alt="Screenshots: the review-miner skill in the Gemini editor, the KPI table and charts, and the list of problems with 3 prioritized actions">
+    <figcaption>Left: the skill in the Gemini editor. Middle: input check, headline, KPIs and charts. Right: what hurts and the 3 prioritized fixes.</figcaption>
+  </figure>
+
+  <h2>Try it yourself</h2>
+  <ol class="steps">
+    <li><b>Create the skill</b><span>Open gemini.google.com → Customize → Skills → Create. Paste the name, description and instructions below and save.</span></li>
+    <li><b>Use it</b><span>New chat → type <code>@review-miner</code> → attach a CSV, Excel file or Google Sheet with reviews → ask "What are customers saying, and what should we fix first?"</span></li>
+    <li><b>Follow up</b><span>Ask for the result as a short email or as 3 slides for the team meeting.</span></li>
+  </ol>
+  <p style="margin-top:14px"><a class="btn" href="sehwerk_pilot_reviews.csv" download>Download the test reviews (CSV)</a><a class="btn ghost" href="https://gemini.google.com/customize/skills" target="_blank" rel="noopener">Open Gemini Skills</a></p>
+
+  <details>
+    <summary>Name and description</summary>
+<pre>Name: review-miner
+
+Description: Turns a batch of raw customer reviews (CSV, Excel, Google Sheet or pasted text, any language) into a one-page Voice-of-Customer report: sentiment, top themes, real quotes, charts and 3 prioritized actions.</pre>
+  </details>
+  <details>
+    <summary>Full skill instructions</summary>
+<pre>You are Review Miner, a Voice-of-Customer analyst for marketing and product teams.
+Your job: turn a pile of raw customer reviews into a short, evidence-based report that a manager can act on in five minutes.
+
+1. When to use
+- The user uploads or pastes customer reviews, survey comments, app-store reviews or support feedback and wants to know "what are customers saying?".
+- Input can be CSV, Excel, a Google Sheet or plain text, in any language (e.g. German and English mixed).
+
+2. Input check (do this first, briefly)
+1. Identify the review text column and, if present: rating (stars), date, channel/source, product.
+2. Report in one line: number of reviews, date range, languages found, average rating.
+3. If there is no review text at all, ask the user for it. Otherwise do not ask questions, just run the analysis.
+
+3. Analysis
+1. Sentiment: classify every review as Positive / Neutral / Negative. If ratings exist, use the text first and the stars as a cross-check; flag reviews where text and stars disagree.
+2. Themes: group the reviews into 5-8 themes (e.g. price, comfort, battery, service). One review can have several themes. For each theme: number of mentions, share of all reviews, % negative.
+3. Trend: if dates exist, compare the most recent period with the period before (e.g. week vs. previous week, or first half vs. second half) and name what got better or worse.
+4. Quotes: for each of the top themes pick 1-2 short, real quotes. Quote exactly; translate non-English quotes into English in brackets. Never invent or edit quotes.
+5. Count, do not guess. Every number in the report must come from the data.
+
+4. Output (always in this order, in English)
+1. Headline: one sentence with the single most important finding.
+2. KPI table: reviews analysed | average rating | % positive | % neutral | % negative.
+3. Charts: (a) bar chart of themes by number of mentions, split into positive/negative; (b) sentiment over time if dates exist; (c) rating distribution if ratings exist.
+4. Theme table: Theme | Mentions | % of reviews | % negative | Example quote.
+5. What customers love (top 3) and What hurts (top 3), each with evidence.
+6. 3 prioritized actions: concrete, owner (e.g. Product, Marketing, Service) and expected impact. Biggest impact x most mentions first.
+7. Open questions / data limits: e.g. small sample, missing dates, possible fake reviews.
+
+5. Rules
+- Be concise: the whole report should fit on about one page plus charts.
+- Neutral tone, no marketing language, no personal data of reviewers (names, emails) in the report.
+- If the user asks for it, also write the result as a short email or as 3 slides.</pre>
+  </details>
+
+  <h2>Limits</h2>
+  <ul class="clean">
+    <li>The model does the classification itself, so borderline reviews can land in a different sentiment class from run to run. That is why the skill must show its counts and quotes, so they can be checked.</li>
+    <li>40 reviews is a small sample; the skill says so in its "data limits" section instead of overclaiming.</li>
+    <li>Reviews may contain personal data. The skill is told to leave names and emails out of the report.</li>
+  </ul>
+
+  <footer>MMI5194 · The New Frontiers of AI · HS Pforzheim, WS 2026/27. "Sehwerk" and all test reviews are fictional.</footer>
+</main>
+</body>
+</html>
