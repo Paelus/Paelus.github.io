@@ -1,0 +1,2 @@
+Extra Credit - my own Gemini skill "review-miner" turns raw customer reviews in any language into themes, charts, real quotes and 3 prioritized fixes, so a team knows what to do first
+https://gemini.google.com/customize/skills
