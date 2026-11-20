@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sehwerk – See more. Film nothing.</title>
+<meta name="description" content="Sehwerk: camera-free smart glasses with your prescription included, fitted by your optician.">
+<style>
+  :root {
+    --ink: #16202a;
+    --ink-soft: #4a5866;
+    --paper: #f6f4ef;
+    --card: #ffffff;
+    --line: #e2ddd3;
+    --accent: #1f5f5b;
+    --accent-dark: #164643;
+    --accent-soft: #e3efed;
+    --radius: 14px;
+    --max: 1120px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(246, 244, 239, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
+  .logo svg { width: 34px; height: 16px; }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-links a { color: var(--ink-soft); text-decoration: none; font-size: 0.95rem; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links .pill { color: #fff; background: var(--accent); padding: 8px 16px; border-radius: 999px; }
+  .nav-links .pill:hover { background: var(--accent-dark); color: #fff; }
+
+  /* Buttons */
+  .btn {
+    display: inline-block; text-decoration: none; font-weight: 600;
+    padding: 14px 24px; border-radius: 999px; font-size: 1rem;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; border: 2px solid var(--accent); }
+  .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn-ghost { color: var(--accent); border: 2px solid var(--accent); background: transparent; }
+  .btn-ghost:hover { background: var(--accent-soft); }
+
+  /* Hero */
+  .hero { padding: 72px 0 64px; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+  .eyebrow {
+    display: inline-block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+    padding: 6px 12px; border-radius: 999px; margin-bottom: 20px;
+  }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.08; margin: 0 0 20px; letter-spacing: -0.02em; }
+  .hero p.lead { font-size: 1.15rem; color: var(--ink-soft); margin: 0 0 32px; max-width: 34em; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .hero-art {
+    background: linear-gradient(160deg, #ffffff 0%, #ebe7de 100%);
+    border: 1px solid var(--line); border-radius: 24px; padding: 40px 28px;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .hero-art svg { width: 100%; max-width: 440px; height: auto; }
+  .hero-art .caption { font-size: 0.85rem; color: var(--ink-soft); text-align: center; }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { max-width: 640px; margin-bottom: 40px; }
+  .section-head h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .section-head p { color: var(--ink-soft); margin: 0; font-size: 1.05rem; }
+
+  /* Benefits */
+  #benefits { background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .card {
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .card .icon {
+    width: 48px; height: 48px; border-radius: 12px; background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card .icon svg { width: 26px; height: 26px; }
+  .card h3 { margin: 4px 0 0; font-size: 1.25rem; }
+  .card p { margin: 0; color: var(--ink-soft); }
+
+  /* CTA */
+  .cta-box {
+    background: var(--accent); color: #fff; border-radius: 24px;
+    padding: 56px 40px; text-align: center;
+  }
+  .cta-box h2 { font-size: clamp(1.7rem, 3.5vw, 2.4rem); margin: 0 0 12px; line-height: 1.15; }
+  .cta-box p { margin: 0 auto 32px; max-width: 32em; color: #d4e6e3; font-size: 1.1rem; }
+  .cta-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .cta-box .btn-primary { background: #fff; color: var(--accent-dark); border-color: #fff; }
+  .cta-box .btn-primary:hover { background: var(--accent-soft); border-color: var(--accent-soft); }
+  .cta-box .btn-ghost { color: #fff; border-color: rgba(255,255,255,0.7); }
+  .cta-box .btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+  /* Footer */
+  footer { padding: 32px 0 40px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 0.9rem; }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  .foot strong { color: var(--ink); }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .hero { padding: 48px 0 40px; }
+    .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+    .cards { grid-template-columns: 1fr; }
+    section { padding: 56px 0; }
+  }
+  @media (max-width: 560px) {
+    .nav-links a:not(.pill) { display: none; }
+    .hero-actions .btn, .cta-actions .btn { width: 100%; text-align: center; }
+    .cta-box { padding: 40px 22px; }
+    .card { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top" aria-label="Sehwerk home">
+      <svg viewBox="0 0 68 32" fill="none" stroke="currentColor" stroke-width="4" aria-hidden="true">
+        <rect x="2" y="4" width="26" height="22" rx="10"/>
+        <rect x="40" y="4" width="26" height="22" rx="10"/>
+        <path d="M28 13 q6 -5 12 0"/>
+      </svg>
+      Sehwerk
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#benefits">Benefits</a>
+      <a href="#optician">Opticians</a>
+      <a class="pill" href="#optician">Book a fitting</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">See more. Film nothing.</span>
+        <h1 id="hero-title">Smart glasses you can wear anywhere.</h1>
+        <p class="lead">Sehwerk shows captions, translation and notes in your field of view, with no camera on board, your prescription included and your data processed on the device or on EU servers. Fitted by your optician.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#optician">Find a Sehwerk optician near you</a>
+          <a class="btn btn-ghost" href="#benefits">Why Sehwerk</a>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <svg viewBox="0 0 440 200" role="img" aria-label="Illustration of Sehwerk glasses showing a live caption in the lens">
+          <defs>
+            <linearGradient id="lens" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#e9f3f1"/>
+              <stop offset="1" stop-color="#cfe2de"/>
+            </linearGradient>
+          </defs>
+          <!-- temples -->
+          <path d="M20 62 L4 52" stroke="#16202a" stroke-width="8" stroke-linecap="round"/>
+          <path d="M420 62 L436 52" stroke="#16202a" stroke-width="8" stroke-linecap="round"/>
+          <!-- frames -->
+          <rect x="20" y="50" width="170" height="120" rx="48" fill="url(#lens)" stroke="#16202a" stroke-width="10"/>
+          <rect x="250" y="50" width="170" height="120" rx="48" fill="url(#lens)" stroke="#16202a" stroke-width="10"/>
+          <!-- bridge -->
+          <path d="M190 92 Q220 70 250 92" fill="none" stroke="#16202a" stroke-width="10" stroke-linecap="round"/>
+          <!-- display overlay in right lens -->
+          <rect x="278" y="92" width="114" height="40" rx="8" fill="#1f5f5b" opacity="0.92"/>
+          <rect x="288" y="102" width="70" height="6" rx="3" fill="#ffffff"/>
+          <rect x="288" y="115" width="92" height="6" rx="3" fill="#ffffff" opacity="0.7"/>
+          <!-- subtle reflection in left lens -->
+          <path d="M52 78 Q70 66 92 68" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+          <!-- no-camera mark -->
+          <g transform="translate(220 30)">
+            <circle r="16" fill="#ffffff" stroke="#1f5f5b" stroke-width="3"/>
+            <rect x="-8" y="-5" width="12" height="10" rx="2" fill="none" stroke="#1f5f5b" stroke-width="2.5"/>
+            <path d="M4 -2 L9 -5 L9 5 L4 2" fill="none" stroke="#1f5f5b" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M-11 11 L11 -11" stroke="#1f5f5b" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+        <p class="caption">No camera on board. Captions, translation and notes appear right in your line of sight.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="benefits" aria-labelledby="benefits-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="benefits-title">See more. Film nothing.</h2>
+        <p>Mehr sehen. Nichts filmen.</p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1f5f5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="7" width="13" height="10" rx="2"/><path d="M15 11l6-3v8l-6-3"/><path d="M3 3l18 18"/>
+            </svg>
+          </div>
+          <h3>Nobody gets filmed.</h3>
+          <p>Sehwerk has no camera. That is a deliberate choice, not a missing feature. Wear your glasses into meetings, client visits and other people's homes without anyone wondering whether they are being recorded. The people around you stay comfortable, and so do you.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1f5f5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="6.5" cy="13" r="4.5"/><circle cx="17.5" cy="13" r="4.5"/><path d="M11 12.5q1-1 2 0"/><path d="M2 12L1 9"/><path d="M22 12l1-3"/>
+            </svg>
+          </div>
+          <h3>Your glasses, made smarter.</h3>
+          <p>Most smart glasses treat prescription lenses as an extra. With Sehwerk, single-vision lenses are part of the base product, and varifocals are available. Your optician measures, fits and adjusts them, just like the glasses you already wear.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1f5f5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>
+            </svg>
+          </div>
+          <h3>Your data stays in Europe.</h3>
+          <p>Processing happens on the device wherever possible, and on EU servers for the rest. Sehwerk is designed GDPR-first from the ground up, so your conversations and notes are not routed through US or Chinese clouds.</p>
+        </article>
+
+        <article class="card">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1f5f5b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9h8"/><path d="M8 12h5"/>
+            </svg>
+          </div>
+          <h3>Built for how you work, in German.</h3>
+          <p>Live captions, translation, meeting notes, a discreet teleprompter, notifications and navigation, all in your line of sight. German-language AI is part of the product from day one, not an afterthought.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="optician" aria-labelledby="cta-title">
+    <div class="wrap">
+      <div class="cta-box">
+        <h2 id="cta-title">Find a Sehwerk optician near you</h2>
+        <p>Try them on, have them fitted to your prescription, and see for yourself.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="#optician">Find a Sehwerk optician near you</a>
+          <a class="btn btn-ghost" href="#optician">Book a fitting appointment</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span><strong>Sehwerk</strong> · See more. Film nothing.</span>
+    <span>Sehwerk is a fictional brand. Demo prototype for a university course project.</span>
+  </div>
+</footer>
+
+</body>
+</html>

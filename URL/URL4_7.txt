@@ -1,2 +1,2 @@
-Gemini Skills-3 multi-agent virtual team
-https://drluarn.github.io/
+Gemini Skills-3 - I ran the venture-team skill as a 6-agent team in Claude Code: research, strategy, copy, prototype, QA and review for smart glasses in Germany
+https://paelus.github.io/venture-team/

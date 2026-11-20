@@ -1,0 +1,60 @@
+# Final Project Review: Sehwerk (camera-free, prescription-first AI display glasses for Germany)
+
+*Prepared by: Reviewer Agent | Reviewed: 01-research.md, 02-strategy.md, 03-copywriting.md, 04-prototype/index.html, 05-qa-report.md | 20 Nov 2026*
+
+---
+
+## Executive Summary
+
+Five agents took the team from a market scan to a working landing page. Research found strong global growth but an unusually strong privacy backlash in Germany: 76% do not want to be filmed, and the Hamburg DPA has said a ban is possible. Strategy turned that finding into a clear position: **camera-free, prescription-included, EU-processed glasses sold through opticians, aimed first at professionals aged 30–55**. The copy and the prototype carry that position through faithfully, and QA found no blocking defects, so the CEO skipped the developer fix loop. The chain from evidence to position to message is the project's main strength. Each step can be traced back to a research finding.
+
+The weaknesses come from what the team did not question. "Nobody gets filmed" hides the fact that captions and meeting notes depend on **always-listening microphones that record other people's speech**, which in Germany is a legal and social issue in its own right. The launch timeline and unit economics are untested, and the first-mover claim ignores that Even Realities already holds the camera-free position. The landing page is aimed at German buyers but written in English. **Verdict: a coherent, well-sourced concept and a clean demo. It is not yet a validated business case, and two core claims need to be revised before anyone outside the course sees them.**
+
+## Deliverables Overview
+
+| Stage | Output | Status |
+|---|---|---|
+| 1. Research | `01-research.md`: trends, 5 competitors, 4 segments, barriers/opportunities, 22 sources | ✅ Complete. Strong sourcing and honest data caveats. Germany market size is unverified (secondary summaries only). |
+| 2. Strategy | `02-strategy.md`: positioning, primary/secondary segments, differentiation table, phased GTM, KPIs | ✅ Complete, with issues. Internal varifocal contradiction (§1 "offer" vs §3 "included"). Timeline and pricing not tested for feasibility. |
+| 3. Copywriting | `03-copywriting.md`: slogan, hero, 4 benefits, CTAs, 8 pitch points, compliance notes | ✅ Complete, with issues. Disciplined claim control. Some pitch points overclaim (see below). English-only for a German market. |
+| 4. Prototype | `04-prototype/index.html`: single-page responsive landing page | ✅ Complete (demo grade). Copy matches word for word. CTAs lead nowhere, no Impressum/Datenschutz, no German version. |
+| 5. QA | `05-qa-report.md`: 0 🔴, 7 🟡, detailed 🟢 checklist | ✅ Complete. Thorough within its scope. Checked against strategy and copy, not against research or law. |
+| (Fix loop) | Developer revision | ⏭️ Skipped (no 🔴). QA's own "fix before presenting" items 1–3 are therefore still open. |
+
+## Strengths
+
+1. **A traceable line from evidence to position.** Every pillar of the positioning is tied to a research figure. No camera answers Bitkom's 76% and 82% findings. Included prescription answers the 64% / 38.7 M glasses wearers. EU data answers the "distrust of US/Chinese cloud" pain point. Optician-first answers Fielmann's caution and the HateAid complaint against retailers. This is the best feature of the whole project.
+2. **Honest handling of uncertainty.** Research labels its estimates and flags conflicting forecasts. Strategy writes "insufficient information" instead of inventing numbers (price, KPI targets, reimbursement, B2B). The copywriter turns those gaps into explicit "do not claim" rules (no price, no "independently audited", no health claims, no battery or weight figures), and the prototype and QA both follow them. These caveats stay intact from one stage to the next, which is rare in multi-agent output.
+3. **Sound segment choice.** Choosing Segment B and dropping Segment A (camera-dependent, €300–500, head-on against Meta) is well argued. Holding Segment C until reimbursement has been researched avoids a risky health claim.
+4. **The main competitor is named correctly.** Strategy names Even Realities, not Meta, as the real threat and says Sehwerk must win on the full package, not on being camera-free alone.
+5. **Channel thinking includes the retailer.** The pitch to opticians ("no camera, no legal risk for you") uses the HateAid complaint against retailers in a smart way, and the plan includes concrete incentives (training, demo frames, fitting margin, easy returns).
+6. **Clean, accessible prototype.** Valid HTML, correct heading hierarchy, landmarks, ARIA labels, good contrast, a responsive layout, and copy that matches the copy file exactly. The visual tone (calm, teal on paper) fits a professional, trust-based audience.
+7. **Useful QA.** QA found a real cross-document inconsistency (varifocals) instead of only checking the HTML. It also spotted the missing Impressum/Datenschutz links, which is a Germany-specific requirement.
+
+## Areas for Improvement
+
+1. **Audio privacy is the biggest blind spot, and it runs through every stage.** Captions, meeting notes and translation all need microphones that pick up *other people's* speech. In Germany, secretly recording spoken words is a criminal offence (§201 StGB, "Vertraulichkeit des Wortes"), and GDPR applies to processing a third party's voice. Bitkom's 82% "recording must be clearly visible" finding is not limited to cameras. Yet:
+   - Research covers only filming.
+   - Strategy calls the privacy objection removed "completely".
+   - The copy says the glasses can be worn into "other people's homes" and "client visits" without anyone wondering whether they are being recorded, and pitch point 6 promises retailers "no recording-related legal risk".
+   - QA checks claims only against the strategy, so it could not catch this.
+   As written, the core promise could be attacked by the same data protection officials and NGOs that the strategy wants to avoid.
+2. **"First-mover window" contradicts the team's own analysis.** Pitch point 8 presents Sehwerk as first to the "privacy-first" position. Even Realities has sold camera-free glasses in Germany since April 2026, as the strategy itself notes. The real window is "before Google/Samsung", and the claimed edge (prescription included, optician channel, EU data, German AI) depends on Even being weaker on data handling and German AI, which the strategy says is *not verified*.
+3. **Timeline and feasibility are unrealistic.** Phase 0 aims to launch "before 18 Feb 2027 if possible", less than three months from today, for a hardware product with no design, supplier, certification or funding plan. Launching before that date would also not exempt units sold after it from the Battery Regulation. The plan needs a product development phase and a realistic launch window. Today it moves straight from "legal review" to "optician pilot".
+4. **Unit economics are the hidden weak point of the main differentiator.** Including prescription lenses (and possibly varifocals) at €600–900 is a margin question that the strategy names but does not size. Even G2 plus lenses costs €868. If Sehwerk ends up near €900 with only single-vision lenses included, "made smarter, prescription included" is a small price edge, not a clear advantage.
+5. **The varifocal contradiction is still open.** Strategy §1 says "offer varifocals". §3 (table and selling point 2) says "included". Copy and prototype use the safer "available". QA flagged the conflict, but no one fixed the source file, so later material may still start from the wrong wording.
+6. **A German-market page written in English.** The site's audience is German professionals buying through German opticians, but the page is `lang="en"` and only the slogan has a German version, marked "for review" and published without approval or a `lang="de"` tag. For a positioning built on "German-language AI from day one" and local trust, a German primary version matters for more than accessibility.
+7. **The prototype covers only half of the GTM.** The strategy's primary channel is opticians, but the nav link "Opticians" leads to a consumer CTA. There is no "For opticians / become a stockist" section, even though the strongest argument in the plan is aimed at retailers. There is also no FAQ answering the obvious German objections (microphones, data storage, battery, price range "from").
+8. **Prototype issues left open after the fix loop was skipped.** QA's own summary said 🟡 items 1–3 should be fixed "before it is presented as a real landing page": CTAs that lead nowhere, the missing `lang="de"`, and the slogan used as the benefits `<h2>`. Skipping the loop follows the process rule (no 🔴), but these are cheap fixes, and leaving them open means the demo presents known defects. The process rule may be too strict. A "cheap 🟡" fast path would have been worth one developer pass.
+9. **Weak spots in the research base.** The Germany market size comes from search snippets of paywalled reports (one page could not be retrieved). Meta's share appears as both ~80% and ~82%. Segments A–D are partly inferred. None of this invalidates the direction, but the business case has no bottom-up market sizing for Segment B (for example, the number of German professionals who wear glasses × likely adoption).
+10. **Scope of QA.** QA was very good on HTML and copy, but its baseline was the strategy and copy files only. Claims that are consistent across the chain can still be wrong. A QA step that also checks claims against the research and basic German law would have caught items 1 and 2.
+
+## Recommended Next Steps (by priority)
+
+1. **Revise the privacy claim to cover audio (before any external use).** Define the microphone model: push-to-listen or a visible "listening" indicator, on-device transcription only, no stored audio by default, and a consent flow for meeting notes. Then update strategy §1/§3, the copy ("Nobody gets filmed" can stay, but drop "without anyone wondering whether they are being recorded"), and pitch point 6 (change "no recording-related legal risk" to "no camera-related legal risk"). Get a short legal opinion on §201 StGB and GDPR for live captioning.
+2. **Run a feasibility and unit-economics sprint.** Estimate the BOM, lens and fitting costs, and the optician margin, to confirm whether €600–900 with included lenses works. Check Battery Regulation applicability with a lawyer. Replace the "before 18 Feb 2027" goal with a realistic roadmap (design, suppliers, CE/RED, pilot), likely 2028, and check whether the Google/Samsung window still holds by then.
+3. **Validate the edge over Even Realities.** Do a hands-on teardown and test of Even G2 (data flows, German speech quality, prescription process, optician presence). If Even is already good at these, find a sharper differentiator, for example certified hearing/caption support for Segment C or an optician exclusive.
+4. **Fix the source documents.** Settle the varifocal wording in `02-strategy.md` ("available", or "included" only if the costs support it). Rewrite pitch point 8 as "before Google/Samsung reach the EU", not first-mover overall.
+5. **Run one developer pass on the prototype.** Separate placeholder targets for "find" and "book", a descriptive benefits `<h2>`, `lang="de"` (once the slogan is approved), Impressum/Datenschutz placeholders, and the `-webkit-backdrop-filter` prefix. Then add a German primary version, a "For opticians" section and a short privacy FAQ.
+6. **Validate demand early.** Hold 5–10 interviews with independent opticians (would they stock it, at what margin?) and 10–15 with Segment B professionals who wear glasses (value of captions and notes vs. price, reaction to microphones). Optionally run the landing page as a smoke test with a waitlist to measure interest.
+7. **Prepare the later phases.** Research health-insurance reimbursement and the Hilfsmittelverzeichnis before committing to Segment C, and build a bottom-up size estimate for Segment B and the B2B option, so the phase 2–3 decisions rest on data rather than inference.
