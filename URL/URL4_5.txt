@@ -1,2 +1,2 @@
-Gemini Skills-1 poster-designer
-https://drluarn.github.io/
+Gemini Skills - my own poster-designer skill (@poster-designer-pascal) creates a course poster with a main character
+https://gemini.google.com/customize/skills
