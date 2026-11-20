@@ -1,2 +1,2 @@
-Gemini Skills-2 weekly-report
-https://drluarn.github.io/
+Gemini Skills-2 - my weekly-report skill turns the Sep-Oct sales sheet into a week-over-week dashboard, charts and a ready-to-send email
+https://gemini.google.com/customize/skills
