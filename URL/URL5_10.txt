@@ -1,0 +1,2 @@
+Extra Credit #5-10 - my own AI chatbot on this website: chat widget connected to an n8n webhook agent (Gemini, memory, SerpApi web search) that knows my portfolio projects
+https://paelus.github.io/
