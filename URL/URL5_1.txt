@@ -1,2 +1,2 @@
-n8n AI Agent
-https://drluarn.github.io/
+n8n AI Agent - my first agent: chat trigger, Gemini model, memory and SerpApi web search; it knows today's date and looks up the latest news
+https://n8n.io/
