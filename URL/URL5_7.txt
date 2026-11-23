@@ -1,1 +1,2 @@
-OpenClaw - submission not required for this assignment
+OpenClaw - one-page infographic: what OpenClaw is, its agent anatomy (soul, claws, diary, clones, pulse), skills and integrations, a weekly market-pulse use case for marketing, and safety risks with my evaluation
+https://paelus.github.io/openclaw-infographic/
