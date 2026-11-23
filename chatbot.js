@@ -3,7 +3,7 @@ class ChatBot {
     constructor() {
         // ⚠️ Important: Replace with your n8n webhook URL
         // ****************************************************************
-        this.webhookUrl = 'https://homeemba.app.n8n.cloud/webhook/chat';
+        this.webhookUrl = 'https://paelus.app.n8n.cloud/webhook/paelus-chat';
         // ****************************************************************        
         // Initialize session ID
         this.sessionId = this.getOrCreateSessionId();
@@ -529,7 +529,7 @@ class ChatBot {
                     <div class="chatbot-header">
                         <div class="chatbot-title">
                             <span class="title-icon">🎓</span>
-                            <span>Prof. Luan's AI Course ChatBOT</span>
+                            <span>Pascal's AI Portfolio Assistant</span>
                         </div>
                         <div class="chatbot-header-buttons">
                             <button class="chatbot-btn clear-btn" id="clearChatBtn" title="Clear chat history">
@@ -822,7 +822,7 @@ class ChatBot {
         if (recentHistory.length === 0) {
             // If no history, show welcome message
             setTimeout(() => {
-                this.addMessage("Hello! I'm Prof. Luan's AI course assistant. Do you have any questions?", 'ai');
+                this.addMessage("Hi! I'm Pascal's AI assistant. Ask me about his AI course projects, or anything else.", 'ai');
             }, 1000);
         }
     }
