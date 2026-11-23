@@ -1,2 +1,2 @@
-ChatGPT multi-agent scheduled task
-https://drluarn.github.io/
+ChatGPT multi-agent scheduled task - three research agents (company updates, media hands-on, new agent products) build a daily interactive AI Agent dashboard, scheduled every morning
+https://chatgpt.com/
