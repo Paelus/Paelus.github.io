@@ -1,2 +1,2 @@
-ChatGPT Plugins - canva
-https://drluarn.github.io/
+ChatGPT Plugins - Canva: ChatGPT designed an 8-slide 16:9 course presentation "The New Frontiers of AI" directly in Canva, editable there
+https://www.canva.com/
