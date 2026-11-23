@@ -1,2 +1,1 @@
-OpenClaw
-https://drluarn.github.io/
+OpenClaw - submission not required for this assignment
