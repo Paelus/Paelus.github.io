@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusLoop – Reusable cups for Studierendenwerke (demo)</title>
+<meta name="description" content="Demo prototype for a fictional brand: a white-label reusable cup deposit system for Studierendenwerke, created for a university course.">
+
+<style>
+  :root {
+    --ink: #17302a;
+    --ink-soft: #4a5f59;
+    --bg: #f7f5ef;
+    --surface: #ffffff;
+    --brand: #1f7a5c;
+    --brand-dark: #155a44;
+    --accent: #f2b544;
+    --line: #e3dfd3;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  .site-header { border-bottom: 1px solid var(--line); background: var(--bg); }
+  .site-header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; color: var(--ink); text-decoration: none; }
+  .logo svg { width: 28px; height: 28px; }
+  .site-header nav a { color: var(--ink-soft); text-decoration: none; margin-left: 22px; font-size: .95rem; }
+  .site-header nav a:hover { color: var(--brand); }
+
+  /* Hero */
+  .hero { padding: 64px 0 72px; }
+  .hero .wrap { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; }
+  .eyebrow { display: inline-block; font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); background: #e2f0ea; padding: 5px 12px; border-radius: 999px; margin: 0 0 18px; }
+  .hero h1 { font-size: clamp(2rem, 4.2vw, 3rem); line-height: 1.15; margin: 0 0 18px; letter-spacing: -.01em; }
+  .hero .sub { font-size: 1.1rem; color: var(--ink-soft); margin: 0 0 14px; }
+  .hero .support { font-size: .95rem; color: var(--ink-soft); margin: 0 0 28px; border-left: 3px solid var(--accent); padding-left: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-block; padding: 13px 22px; border-radius: 10px; font-weight: 600; text-decoration: none; transition: background .2s, color .2s, border-color .2s; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-dark); }
+  .btn-ghost { border: 1.5px solid var(--line); color: var(--ink); background: var(--surface); }
+  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+  .hero-art { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 28px; }
+  .hero-art svg { width: 100%; height: auto; display: block; }
+  .slogan { text-align: center; font-weight: 600; color: var(--brand-dark); margin: 14px 0 0; font-size: .98rem; }
+
+  /* Sections */
+  section h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 10px; }
+  .section-intro { color: var(--ink-soft); max-width: 640px; margin: 0 0 36px; }
+  .benefits { padding: 72px 0; background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 22px; }
+  .card .num { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 50%; background: var(--brand); color: #fff; font-weight: 700; font-size: .9rem; margin-bottom: 14px; }
+  .card h3 { font-size: 1.05rem; margin: 0 0 10px; line-height: 1.35; }
+  .card p { margin: 0 0 10px; font-size: .93rem; color: var(--ink-soft); }
+  .card .note { font-size: .82rem; font-style: italic; margin: 0; }
+
+  .nudge { padding: 56px 0; }
+  .nudge .wrap { display: grid; grid-template-columns: 1fr 1.4fr; gap: 40px; align-items: start; }
+  .nudge p { color: var(--ink-soft); margin: 0; }
+
+  /* CTA */
+  .cta { padding: 0 0 80px; }
+  .cta-box { background: var(--ink); color: #fff; border-radius: 24px; padding: 48px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; }
+  .cta-box h2 { color: #fff; }
+  .cta-box p { color: #cfdcd7; margin: 0 0 24px; }
+  .cta-box .btn-primary { background: var(--accent); color: var(--ink); }
+  .cta-box .btn-primary:hover { background: #f6c76a; }
+  .metrics { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .metrics li { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 14px 16px; font-size: .95rem; }
+  .metrics strong { display: block; color: var(--accent); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+  .demo-hint { font-size: .85rem; color: #9fb4ad; margin: 16px 0 0; }
+  .student-line { margin: 40px auto 0; max-width: 720px; text-align: center; font-size: 1.05rem; color: var(--ink-soft); }
+  .student-line q { color: var(--ink); font-weight: 600; }
+
+  /* Footer */
+  .site-footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: .85rem; color: var(--ink-soft); }
+  .site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  .site-footer a { color: var(--brand); }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .site-header nav a:not([href="#pilot"]) { display: none; }
+    .hero { padding: 40px 0 48px; }
+    .hero .wrap, .nudge .wrap, .cta-box { grid-template-columns: 1fr; gap: 28px; }
+    .hero-art { max-width: 380px; margin: 0 auto; width: 100%; }
+    .cta-box { padding: 32px 22px; }
+    .benefits { padding: 52px 0; }
+  }
+  @media (max-width: 520px) {
+    .cards { grid-template-columns: 1fr; }
+    .actions .btn { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body id="top">
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="CampusLoop home">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="15" fill="#1f7a5c"/>
+        <path d="M11 10h10l-1.4 13a2 2 0 0 1-2 1.8h-3.2a2 2 0 0 1-2-1.8z" fill="#fff"/>
+        <rect x="10" y="8" width="12" height="2.6" rx="1.2" fill="#f2b544"/>
+      </svg>
+      CampusLoop
+    </a>
+    <nav aria-label="Main">
+      <a href="#benefits">Benefits</a>
+      <a href="#nudges">Nudges &amp; data</a>
+      <a href="#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">For Studierendenwerke</p>
+        <h1 id="hero-title">Reusable cups that work: on the student card, under your brand.</h1>
+        <p class="sub">CampusLoop is a white-label cup deposit system for Studierendenwerke. The deposit is booked on the student card, cups can be returned at any participating campus, and you pay per cup instead of a monthly system fee.</p>
+        <p class="support">Single-use cups are getting more expensive in university towns with a packaging tax, and the PPWR requires a reusable option from about February 2028. CampusLoop helps you run a system that is actually used, not one that only exists on paper.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#pilot">Request a pilot call</a>
+          <a class="btn btn-ghost" href="#benefits">See the benefits</a>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <svg viewBox="0 0 320 280" role="img" aria-label="A reusable cup surrounded by a circular return arrow">
+          <!-- loop arrow -->
+          <path d="M 70 210 A 115 115 0 1 1 250 210" fill="none" stroke="#1f7a5c" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 18"/>
+          <path d="M 250 210 A 115 115 0 0 1 90 226" fill="none" stroke="#f2b544" stroke-width="10" stroke-linecap="round"/>
+          <polygon points="74,212 104,214 88,238" fill="#f2b544"/>
+          <!-- steam -->
+          <path d="M140 62 c-8 -10 8 -16 0 -28" fill="none" stroke="#c9c2b0" stroke-width="5" stroke-linecap="round"/>
+          <path d="M168 62 c-8 -10 8 -16 0 -28" fill="none" stroke="#c9c2b0" stroke-width="5" stroke-linecap="round"/>
+          <!-- lid -->
+          <rect x="104" y="72" width="112" height="20" rx="8" fill="#155a44"/>
+          <rect x="120" y="64" width="80" height="12" rx="6" fill="#155a44"/>
+          <!-- cup body -->
+          <path d="M112 92 h96 l-12 118 a12 12 0 0 1 -12 11 h-48 a12 12 0 0 1 -12 -11 z" fill="#1f7a5c"/>
+          <!-- sleeve band -->
+          <path d="M108.5 126 h103 l-3.6 40 h-95.8 z" fill="#f7f5ef"/>
+          <!-- card icon on sleeve -->
+          <rect x="140" y="133" width="40" height="26" rx="4" fill="#fff" stroke="#155a44" stroke-width="2.5"/>
+          <rect x="140" y="139" width="40" height="5" fill="#155a44"/>
+          <rect x="145" y="149" width="14" height="4" rx="2" fill="#f2b544"/>
+        </svg>
+        <p class="slogan">Your brand. Their student card. Every CampusLoop campus.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="benefits" id="benefits" aria-labelledby="benefits-title">
+    <div class="wrap">
+      <h2 id="benefits-title">Built for how campuses actually run</h2>
+      <p class="section-intro">A system, not a cup brand: we provide the cup pool, the campus-card deposit link, return logistics and cross-campus clearing.</p>
+      <div class="cards">
+        <article class="card">
+          <span class="num">1</span>
+          <h3>No app, no cash, just the student card.</h3>
+          <p>Students pay the deposit (proposed: €1, in line with the usual campus deposit) with the card they already carry. There is no registration and no app download, which is a hurdle for spontaneous coffee buyers. Campus-card deposits have already worked in practice, for example at StuCup in Munich.</p>
+          <p class="note">Integration with your card system is checked together with you before any pilot starts.</p>
+        </article>
+        <article class="card">
+          <span class="num">2</span>
+          <h3>Pay per cup, not per month.</h3>
+          <p>No monthly minimum and no fixed system fee: you pay a low fee per cup used. Quiet cafeterias do not pay for capacity they do not need.</p>
+          <p class="note">The exact per-cup price is set during the pilot, based on real washing and logistics costs.</p>
+        </article>
+        <article class="card">
+          <span class="num">3</span>
+          <h3>One return network across campuses.</h3>
+          <p>The goal: a cup borrowed on Campus A can be returned on Campus B, once both take part. CampusLoop would link participating Studierendenwerke through a shared clearing service, so you are not running an island solution. Already running your own system? We connect it rather than replace it.</p>
+        </article>
+        <article class="card">
+          <span class="num">4</span>
+          <h3>Your brand stays on the cup.</h3>
+          <p>CampusLoop is white label: cups, return points and communication carry the Studierendenwerk's name. If you prefer to keep your own cups, you can use our software on its own.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="nudge" id="nudges" aria-labelledby="nudges-title">
+    <div class="wrap">
+      <h2 id="nudges-title">Built-in nudges and the data you need.</h2>
+      <p>We provide cashier settings for a reusable discount or a single-use surcharge. Discounts were the most effective nudge in the HWR Berlin survey, and they are legally allowed. You also get usage data to support your VerpackG reporting and to track progress towards the 2030 reuse target.</p>
+    </div>
+  </section>
+
+  <section class="cta" id="pilot" aria-labelledby="pilot-title">
+    <div class="wrap">
+      <div class="cta-box">
+        <div>
+          <h2 id="pilot-title">Start a pilot with 2-4 cafeterias.</h2>
+          <p>In the pilot we would measure what we found no public data on for campuses: return rate, cycles per cup and cost per cycle. You get the results for your board and for your next tender.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#pilot-metrics">Request a pilot call</a>
+            <a class="btn btn-ghost" href="#pilot-metrics">Download the brief</a>
+          </div>
+          <p class="demo-hint">Demo prototype: these buttons do not send a request or download a file. The brief on packaging taxes and PPWR deadlines is planned, not yet available.</p>
+        </div>
+        <ul class="metrics" id="pilot-metrics" aria-label="What the pilot measures">
+          <li><strong>Return rate</strong>Share of cups that come back to a CampusLoop return point.</li>
+          <li><strong>Cycles per cup</strong>Goal: more than 25, well above the UBA break-even of about 10.</li>
+          <li><strong>Cost per cycle</strong>Real washing and logistics costs, ready for your board.</li>
+        </ul>
+      </div>
+      <p class="student-line">On pilot campuses, students will see: <q>Cup on the card, coffee for less. Bring it back on any CampusLoop campus.</q> (where the Studierendenwerk offers a reusable discount)</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>CampusLoop is a fictional brand. This page is a demo prototype created for a university course and is not a real product or offer.</p>
+    <p><a href="#top">Back to top</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

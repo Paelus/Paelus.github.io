@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusLoop Skill Run</title>
+<style>
+  :root{--bg:#f5f3ee;--card:#fff;--ink:#16202a;--muted:#5b6670;--line:#e2ded5;--accent:#1f5f5b;--accent-soft:#e3efed;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 16px 64px}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px}
+  h1{font-size:clamp(28px,4.5vw,42px);line-height:1.15;margin:14px 0 8px}
+  .lead{color:var(--muted);max-width:760px;margin:0}
+  .input{margin:18px 0 0;font-family:ui-monospace,Consolas,monospace;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:inline-block}
+  .pipe{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:32px 0 8px;counter-reset:s}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 12px;cursor:pointer;text-align:left;font:inherit;color:inherit;position:relative}
+  .step:hover{border-color:var(--accent)}
+  .step[aria-selected="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .step .n{font-size:12px;font-weight:700;color:var(--accent)}
+  .step .t{display:block;font-weight:700;line-height:1.25;margin:2px 0 4px}
+  .step .d{display:block;font-size:13px;color:var(--muted);line-height:1.35}
+  .note{font-size:13px;color:var(--muted);margin:6px 0 24px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+  .doc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px clamp(16px,4vw,40px)}
+  .doc h1{font-size:26px;margin-top:0}
+  .doc h2{font-size:20px;margin-top:28px;border-top:1px solid var(--line);padding-top:18px}
+  .doc h3{font-size:17px}
+  .doc table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;font-size:14px}
+  .doc th,.doc td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  .doc th{background:var(--bg)}
+  .doc a{color:var(--accent);word-break:break-word}
+  .doc code{background:var(--bg);padding:1px 5px;border-radius:4px}
+  .proto{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--accent);color:#fff;border-radius:14px;padding:20px 24px}
+  .proto b{font-size:18px}
+  .proto a{background:#fff;color:var(--accent);text-decoration:none;font-weight:700;padding:10px 18px;border-radius:999px}
+  footer{margin-top:32px;font-size:13px;color:var(--muted)}
+  @media (max-width:820px){.pipe{grid-template-columns:repeat(2,1fr)}}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){--bg:#12171c;--card:#1a2129;--ink:#e8ecef;--muted:#9aa6b1;--line:#2b343e;--accent:#5fb3ab;--accent-soft:#1d3634}
+    :root:not([data-theme="light"]) .proto{color:#0f1a19}
+    :root:not([data-theme="light"]) .proto a{background:#0f1a19;color:#5fb3ab}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="eyebrow">Assignment #5-3 · Skills: a virtual team from a zip file</span>
+  <h1>One installed skill, six agents, one campus product</h1>
+  <p class="lead">I installed the <code>venture-team</code> skill from <code>newAgent.zip</code> (one <code>SKILL.md</code> plus six agent definitions) in a project folder (<code>unit5.3</code>) and ran it with my own product idea. A "CEO" hands the job down a strict sequence of specialist agents that pass files to each other.</p>
+  <div class="input">/venture-team&nbsp; Reusable cup deposit system, German university campuses</div>
+
+  <div class="pipe" role="tablist" aria-label="Agent outputs">
+    <button class="step" role="tab" data-f="01-research.md"><span class="n">01</span><span class="t">Research</span><span class="d">Web search: trends, competitors, customers, barriers</span></button>
+    <button class="step" role="tab" data-f="02-strategy.md"><span class="n">02</span><span class="t">Strategy</span><span class="d">Positioning, target segment, GTM plan</span></button>
+    <button class="step" role="tab" data-f="03-copywriting.md"><span class="n">03</span><span class="t">Copywriter</span><span class="d">Slogan, landing-page copy, pitch points</span></button>
+    <button class="step" role="tab" data-proto="1"><span class="n">04</span><span class="t">Developer</span><span class="d">Single-file landing page prototype</span></button>
+    <button class="step" role="tab" data-f="05-qa-report.md"><span class="n">05</span><span class="t">QA</span><span class="d">0 must-fix, 8 should-fix → one CEO fix pass</span></button>
+    <button class="step" role="tab" data-f="06-final-review.md"><span class="n">06</span><span class="t">Reviewer</span><span class="d">Critical final review and next steps</span></button>
+  </div>
+  <p class="note">Click a step to read that agent's output. QA found nothing blocking, but the CEO sent the developer back once: a real-university example read like a live network, and a speed claim had no source. The QA report shows the page before that fix.</p>
+
+  <div class="grid">
+    <div class="proto"><div><b>Result: “CampusLoop” — Your brand. Their student card.</b><br>A white-label cup deposit system for German student unions, with the deposit booked on the student card (fictional brand).</div><a href="prototype/index.html">Open the prototype →</a></div>
+    <article class="doc" id="doc" aria-live="polite">Loading…</article>
+  </div>
+  <footer>All texts were generated by AI agents for a university course (MMI5194, HS Pforzheim). Market figures come from the sources listed in the research report; the brand is fictional.</footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+  const doc = document.getElementById('doc');
+  const steps = [...document.querySelectorAll('.step')];
+  async function show(btn){
+    if (btn.dataset.proto){ location.href = 'prototype/index.html'; return; }
+    steps.forEach(s => s.setAttribute('aria-selected', s === btn));
+    doc.textContent = 'Loading…';
+    try {
+      const r = await fetch('docs/' + btn.dataset.f);
+      if (!r.ok) throw new Error(r.status);
+      doc.innerHTML = marked.parse(await r.text());
+      doc.querySelectorAll('a[href^="http"]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+    } catch (e) {
+      doc.innerHTML = '<p>Could not load <a href="docs/' + btn.dataset.f + '">' + btn.dataset.f + '</a>.</p>';
+    }
+  }
+  steps.forEach(s => s.addEventListener('click', () => show(s)));
+  show(steps.find(s => s.dataset.f === '06-final-review.md'));
+</script>
+</body>
+</html>

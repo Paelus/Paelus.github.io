@@ -1,2 +1,2 @@
-ChatGPT  Skills
-https://drluarn.github.io/
+Skills - I installed the venture-team skill from newAgent.zip and ran its 6 agents on my own idea: CampusLoop, a reusable cup deposit system for German student unions
+https://paelus.github.io/campus-loop/
