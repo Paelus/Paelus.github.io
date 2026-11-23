@@ -1,2 +1,2 @@
-ChatGPT Sites
-https://ai-practice-lunch-workshop-nov27.luarn.chatgpt.site/
+Sites - responsive event registration website "AI in Practice Lunchtime Workshop": hero, event details, three takeaways, hosts, agenda timeline, registration form with confirmation and FAQ
+https://paelus.github.io/ai-lunch-workshop/

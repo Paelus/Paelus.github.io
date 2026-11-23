@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI in Practice Lunchtime Workshop</title>
+<meta name="description" content="Register for the AI in Practice Lunchtime Workshop: in 60 minutes, learn to hand off repetitive work to AI. Friday, 27 November 2026, 12:00–13:00.">
+<style>
+  :root{
+    --navy:#0d1b3e; --navy-2:#16295a; --blue:#1f6bff; --blue-2:#4f8bff; --blue-soft:#e8f0ff;
+    --warm:#fbf8f3; --card:#ffffff; --ink:#14213d; --muted:#5a6478; --line:#e6e1d8; --ok:#137a4b; --ok-soft:#e6f5ee; --err:#b3261e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--warm);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--blue)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:#fff;text-decoration:none;font-weight:700;border:0;border-radius:999px;padding:14px 26px;font-size:16px;cursor:pointer;box-shadow:0 6px 18px rgba(31,107,255,.28);transition:transform .15s,box-shadow .15s,background .15s}
+  .btn:hover{background:#155ae0;transform:translateY(-1px);box-shadow:0 10px 24px rgba(31,107,255,.34)}
+  .btn:focus-visible,.nav a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+  .btn.ghost{background:transparent;color:#fff;box-shadow:none;border:1.5px solid rgba(255,255,255,.55)}
+  .btn.ghost:hover{background:rgba(255,255,255,.08)}
+
+  /* header */
+  header{position:sticky;top:0;z-index:10;background:rgba(13,27,62,.96);backdrop-filter:blur(6px)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;letter-spacing:.01em}
+  .brand i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--blue);font-style:normal;font-size:15px}
+  .nav ul{display:flex;gap:22px;list-style:none;margin:0;padding:0}
+  .nav ul a{color:#cfdaf5;text-decoration:none;font-size:15px}
+  .nav ul a:hover{color:#fff}
+  .nav .btn{padding:9px 18px;font-size:14px;box-shadow:none}
+
+  /* hero */
+  .hero{background:radial-gradient(1200px 500px at 85% -10%,#2a4fa8 0%,transparent 60%),linear-gradient(160deg,var(--navy) 0%,var(--navy-2) 100%);color:#fff;padding:84px 0 96px;overflow:hidden}
+  .hero-grid{display:grid;grid-template-columns:1.25fr .9fr;gap:48px;align-items:center}
+  .pill{display:inline-block;background:rgba(79,139,255,.18);color:#bcd2ff;border:1px solid rgba(79,139,255,.35);border-radius:999px;padding:5px 14px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .hero h1{font-size:clamp(36px,5.5vw,60px);line-height:1.06;margin:18px 0 16px;letter-spacing:-.02em}
+  .hero h1 span{color:var(--blue-2)}
+  .hero p.sub{font-size:clamp(18px,2.2vw,22px);color:#d9e3fb;margin:0 0 30px;max-width:560px}
+  .hero .actions{display:flex;flex-wrap:wrap;gap:12px}
+  .hero .facts{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:30px;color:#cfdaf5;font-size:15px}
+  .hero .facts b{color:#fff}
+  .ticket{background:var(--warm);color:var(--ink);border-radius:20px;padding:26px 26px 22px;box-shadow:0 24px 60px rgba(0,0,0,.35);transform:rotate(1.5deg);position:relative}
+  .ticket::before,.ticket::after{content:"";position:absolute;top:58%;width:28px;height:28px;border-radius:50%;background:var(--navy-2)}
+  .ticket::before{left:-14px}.ticket::after{right:-14px}
+  .ticket .day{font-size:14px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em}
+  .ticket .date{font-size:40px;font-weight:800;line-height:1.05;margin:4px 0 2px}
+  .ticket .time{font-size:20px;color:var(--muted)}
+  .ticket hr{border:0;border-top:2px dashed var(--line);margin:18px -6px}
+  .ticket .where{display:grid;gap:8px;font-size:15px}
+  .ticket .where div{display:flex;gap:10px;align-items:flex-start}
+  .ticket svg{flex:none;margin-top:3px}
+
+  section{padding:76px 0}
+  .eyebrow{color:var(--blue);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+  h2{font-size:clamp(28px,3.6vw,38px);line-height:1.15;margin:0 0 14px;letter-spacing:-.01em}
+  .lead{color:var(--muted);max-width:640px;margin:0 0 36px}
+
+  /* details */
+  .details{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .tile .k{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .tile .v{font-size:19px;font-weight:700;margin-top:4px}
+  .tile .s{font-size:14px;color:var(--muted);margin-top:2px}
+
+  /* takeaways */
+  .take{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative;overflow:hidden}
+  .card .ico{width:48px;height:48px;border-radius:14px;background:var(--blue-soft);display:grid;place-items:center;margin-bottom:16px}
+  .card h3{margin:0 0 8px;font-size:20px}
+  .card p{margin:0;color:var(--muted);font-size:16px}
+  .card .n{position:absolute;right:18px;top:12px;font-size:44px;font-weight:800;color:#eef2fb}
+
+  /* speaker */
+  .speaker{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;background:var(--navy);color:#fff;border-radius:22px;padding:34px}
+  .avatars{display:flex}
+  .avatars span{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:20px;border:3px solid var(--navy);margin-left:-14px;color:#fff}
+  .avatars span:first-child{margin-left:0}
+  .speaker h3{margin:0 0 6px;font-size:24px}
+  .speaker p{margin:0;color:#cfdaf5}
+
+  /* agenda */
+  .timeline{list-style:none;margin:0;padding:0;position:relative}
+  .timeline::before{content:"";position:absolute;left:84px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--blue),var(--blue-2))}
+  .timeline li{display:grid;grid-template-columns:70px 1fr;gap:44px;padding:0 0 26px;position:relative}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline time{font-weight:800;color:var(--navy);text-align:right;padding-top:1px}
+  .timeline li::after{content:"";position:absolute;left:78px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--warm);border:3px solid var(--blue)}
+  .timeline h3{margin:0 0 2px;font-size:18px}
+  .timeline p{margin:0;color:var(--muted);font-size:16px}
+
+  /* register */
+  .reg{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;align-items:start}
+  .reg aside{position:sticky;top:96px}
+  .reg aside ul{padding-left:20px;color:var(--muted);margin:0}
+  form{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;box-shadow:0 10px 30px rgba(13,27,62,.06)}
+  .field{margin-bottom:18px}
+  label,.legend{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+  input[type=text],input[type=email],select{width:100%;font:inherit;padding:12px 14px;border:1.5px solid #d6d0c4;border-radius:12px;background:#fff;color:var(--ink)}
+  input:invalid:not(:placeholder-shown){border-color:var(--err)}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modes label{display:flex;align-items:center;gap:10px;border:1.5px solid #d6d0c4;border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer;margin:0}
+  .modes input{accent-color:var(--blue);width:18px;height:18px}
+  .modes label:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+  .err{color:var(--err);font-size:14px;margin-top:6px;display:none}
+  .field.bad .err{display:block}
+  .field.bad input,.field.bad select{border-color:var(--err)}
+  form .btn{width:100%;justify-content:center;margin-top:6px}
+  .note{font-size:13px;color:var(--muted);margin:12px 0 0;text-align:center}
+  .success{display:none;background:var(--ok-soft);border:1.5px solid #9fd6bb;color:var(--ok);border-radius:20px;padding:30px;text-align:center}
+  .success b{display:block;font-size:22px;margin-bottom:4px}
+  .success.show{display:block}
+
+  /* faq */
+  .faq{max-width:780px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 20px;margin-bottom:10px}
+  summary{cursor:pointer;font-weight:700;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:16px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--blue);font-size:22px;line-height:1}
+  details[open] summary::after{content:"–"}
+  details p{margin:0 0 16px;color:var(--muted)}
+
+  footer{background:var(--navy);color:#cfdaf5;padding:44px 0 36px;font-size:15px}
+  .foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px}
+  footer h4{color:#fff;margin:0 0 8px;font-size:16px}
+  footer a{color:#fff}
+  footer small{display:block;margin-top:26px;color:#8fa1c7}
+
+  @media (max-width:880px){
+    .hero-grid,.reg{grid-template-columns:1fr}
+    .ticket{transform:none;max-width:420px}
+    .details{grid-template-columns:1fr 1fr}
+    .take{grid-template-columns:1fr}
+    .reg aside{position:static}
+    .nav ul{display:none}
+  }
+  @media (max-width:520px){
+    body{font-size:16px}
+    section{padding:56px 0}
+    .hero{padding:56px 0 64px}
+    .details{grid-template-columns:1fr}
+    .speaker{grid-template-columns:1fr;padding:26px}
+    .modes{grid-template-columns:1fr}
+    .timeline::before{left:62px}.timeline li{grid-template-columns:50px 1fr;gap:40px}.timeline li::after{left:56px}
+  }
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <nav class="nav wrap" aria-label="Main">
+    <a class="brand" href="#top"><i>AI</i>Lunchtime Workshop</a>
+    <ul>
+      <li><a href="#details">Details</a></li>
+      <li><a href="#takeaways">Takeaways</a></li>
+      <li><a href="#agenda">Agenda</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="btn" href="#register">Register Now</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill">Internal workshop · Free for all colleagues</span>
+        <h1>AI in Practice <span>Lunchtime</span> Workshop</h1>
+        <p class="sub">In 60 minutes, learn to hand off repetitive work to AI</p>
+        <div class="actions">
+          <a class="btn" href="#register">Register Now
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="#agenda">See the agenda</a>
+        </div>
+        <div class="facts"><span><b>Fri, 27 Nov 2026</b></span><span><b>12:00–13:00</b></span><span>8F Multipurpose Classroom <b>or online</b></span></div>
+      </div>
+      <div class="ticket" aria-label="Event summary">
+        <div class="day">Friday</div>
+        <div class="date">27 November</div>
+        <div class="time">2026 · 12:00–13:00</div>
+        <hr>
+        <div class="where">
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f6bff" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span><b>8F Multipurpose Classroom</b><br>Bring your lunch, we bring the coffee</span></div>
+          <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1f6bff" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span><b>Online at the same time</b><br>Join link comes with your invitation</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="details">
+    <div class="wrap">
+      <p class="eyebrow">Event details</p>
+      <h2>One lunch break, practical skills you use the same afternoon</h2>
+      <p class="lead">No technical background needed. We work with everyday tasks from the office, step by step, and you leave with prompts you can reuse.</p>
+      <div class="details">
+        <div class="tile"><div class="k">Date</div><div class="v">Friday, 27 Nov 2026</div><div class="s">Add it to your calendar after registering</div></div>
+        <div class="tile"><div class="k">Time</div><div class="v">12:00–13:00</div><div class="s">60 minutes incl. Q&amp;A</div></div>
+        <div class="tile"><div class="k">In person</div><div class="v">8F Multipurpose Classroom</div><div class="s">Limited seats, first come first served</div></div>
+        <div class="tile"><div class="k">Online</div><div class="v">Live stream</div><div class="s">Same session, chat for questions</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="takeaways" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <p class="eyebrow">What you take away</p>
+      <h2>Three things you can do right after lunch</h2>
+      <p class="lead">Each part has a short live demo and a ready-to-copy prompt.</p>
+      <div class="take">
+        <article class="card"><span class="n">1</span>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f6bff" stroke-width="2" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg></div>
+          <h3>Summarize meeting notes</h3>
+          <p>Turn messy notes or a transcript into decisions, owners and next steps in under a minute.</p></article>
+        <article class="card"><span class="n">2</span>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f6bff" stroke-width="2" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div>
+          <h3>Write a first draft of copy</h3>
+          <p>Get a solid first version of an email, announcement or product text, then make it yours.</p></article>
+        <article class="card"><span class="n">3</span>
+          <div class="ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1f6bff" stroke-width="2" aria-hidden="true"><path d="M4 5h5v14H4zM10 5h5v14h-5z"/><path d="M16.5 5.5l4.2 1.2-3.7 13.2-4.2-1.2"/></svg></div>
+          <h3>Build your prompt library</h3>
+          <p>Start a personal library of work prompts so good results are one copy-paste away next time.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="speakers">
+    <div class="wrap">
+      <p class="eyebrow">Your hosts</p>
+      <div class="speaker">
+        <div class="avatars" aria-hidden="true"><span style="background:#1f6bff">DT</span><span style="background:#4f8bff">AI</span><span style="background:#2a4fa8">+</span></div>
+        <div>
+          <h3>The Digital Transformation team</h3>
+          <p>Our internal team helps departments try new tools in real work. They will share examples that colleagues already use, and stay after the session for your questions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="agenda" style="padding-top:20px">
+    <div class="wrap">
+      <p class="eyebrow">Agenda</p>
+      <h2>How the 60 minutes are spent</h2>
+      <p class="lead">Short inputs, live demos, and time to try it yourself.</p>
+      <ol class="timeline">
+        <li><time>12:00</time><div><h3>Welcome &amp; why AI at work</h3><p>What AI is good at, what it is not, and how to use it safely with company data.</p></div></li>
+        <li><time>12:10</time><div><h3>Demo 1: Meeting notes in a minute</h3><p>From raw notes to a clean summary with action items.</p></div></li>
+        <li><time>12:25</time><div><h3>Demo 2: Your first draft</h3><p>Briefing the AI well, and editing the result in your own voice.</p></div></li>
+        <li><time>12:40</time><div><h3>Hands-on: start your prompt library</h3><p>Save three prompts you will reuse next week.</p></div></li>
+        <li><time>12:50</time><div><h3>Q&amp;A and next steps</h3><p>Open questions, resources and follow-up sessions.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="register" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap reg">
+      <aside>
+        <p class="eyebrow">Registration</p>
+        <h2>Save your seat</h2>
+        <p class="lead" style="margin-bottom:18px">Registration takes 30 seconds. Choose in person or online, and we send you a calendar invitation.</p>
+        <ul><li>Free for all colleagues</li><li>No preparation needed</li><li>Bring a laptop if you want to try along</li></ul>
+      </aside>
+      <div>
+        <form id="regForm" novalidate>
+          <div class="field" id="f-name">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" autocomplete="name" placeholder="e.g. Alex Weber" required>
+            <div class="err">Please enter your name.</div>
+          </div>
+          <div class="field" id="f-dept">
+            <label for="dept">Department</label>
+            <select id="dept" name="department" required>
+              <option value="">Select your department</option>
+              <option>Marketing &amp; Communication</option><option>Sales</option><option>Customer Service</option>
+              <option>Finance &amp; Controlling</option><option>HR</option><option>IT</option><option>Operations</option><option>Other</option>
+            </select>
+            <div class="err">Please choose your department.</div>
+          </div>
+          <div class="field" id="f-email">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="email" placeholder="name@company.com" required>
+            <div class="err">Please enter a valid email address.</div>
+          </div>
+          <div class="field" id="f-mode">
+            <span class="legend" id="mode-l">Attendance mode</span>
+            <div class="modes" role="radiogroup" aria-labelledby="mode-l">
+              <label><input type="radio" name="mode" value="in-person" required> In person (8F)</label>
+              <label><input type="radio" name="mode" value="online"> Online</label>
+            </div>
+            <div class="err">Please choose how you will join.</div>
+          </div>
+          <button class="btn" type="submit">Register Now</button>
+          <p class="note">Demo page: your details are not stored or sent anywhere.</p>
+        </form>
+        <div class="success" id="success" role="status" aria-live="polite" tabindex="-1">
+          <b>Registration successful.</b>We'll send you a calendar invitation.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap faq">
+      <p class="eyebrow">FAQ</p>
+      <h2>Good to know</h2>
+      <details><summary>Do I need any technical knowledge?</summary><p>No. The session is made for everyday office work. If you can write an email, you can follow along.</p></details>
+      <details><summary>Can I join online?</summary><p>Yes. The session is streamed live at the same time. Choose "Online" when you register and the join link comes with your calendar invitation.</p></details>
+      <details><summary>Is lunch provided?</summary><p>Bring your own lunch. Coffee and water are provided in the 8F Multipurpose Classroom.</p></details>
+      <details><summary>Can I use company data with AI tools?</summary><p>Only with the tools approved by IT. We cover the basic do's and don'ts in the first ten minutes.</p></details>
+      <details><summary>Will there be a recording or slides?</summary><p>Yes, all registered colleagues receive the slides and the prompt examples after the workshop.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><h4>AI in Practice Lunchtime Workshop</h4>Friday, 27 November 2026 · 12:00–13:00<br>8F Multipurpose Classroom &amp; online</div>
+      <div><h4>Contact</h4>Digital Transformation team<br><a href="mailto:digital.transformation@example.com">digital.transformation@example.com</a><br>Internal phone: ext. 2026</div>
+      <div><h4>Quick links</h4><a href="#register">Register</a> · <a href="#agenda">Agenda</a> · <a href="#faq">FAQ</a></div>
+    </div>
+    <small>Course demo page (MMI5194, HS Pforzheim). The event, company and contact details are fictional.</small>
+  </div>
+</footer>
+
+<script>
+  const form = document.getElementById('regForm'), ok = document.getElementById('success');
+  const checks = [
+    ['f-name',  () => document.getElementById('name').value.trim().length > 1],
+    ['f-dept',  () => document.getElementById('dept').value !== ''],
+    ['f-email', () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value.trim())],
+    ['f-mode',  () => !!form.querySelector('input[name=mode]:checked')]
+  ];
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    let first = null;
+    for (const [id, test] of checks) {
+      const f = document.getElementById(id), good = test();
+      f.classList.toggle('bad', !good);
+      if (!good && !first) first = f.querySelector('input,select');
+    }
+    if (first) { first.focus(); return; }
+    form.style.display = 'none';
+    ok.classList.add('show'); ok.focus();
+  });
+  form.addEventListener('input', e => { const f = e.target.closest('.field'); if (f) f.classList.remove('bad'); });
+</script>
+</body>
+</html>
