@@ -1,2 +1,2 @@
-Hermes
-https://drluarn.github.io/
+Hermes Agent running on instabox.sh - installed on a cloud machine with Gemini 3.5 Flash-Lite, its dashboard compiling a three-phone comparison with subagents, and connected to my WhatsApp
+https://hermes-agent.nousresearch.com/
