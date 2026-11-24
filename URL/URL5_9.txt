@@ -1,2 +1,2 @@
-Extra Credit #5-9 - my own real-time 3D painting after Monet's "Impression, Sunrise": row a boat through Le Havre harbour at dawn, every pixel is one of ~680,000 brush strokes (WebGL2, single HTML file built with Claude)
+Extra Credit #5-9 - my own real-time 3D painting after Monet's "Impression, Sunrise": row a boat through Le Havre harbour at dawn, every pixel is one of ~680,000 brush strokes (WebGL2, single HTML file)
 https://paelus.github.io/impression-sunrise/
