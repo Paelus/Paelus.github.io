@@ -1,0 +1,2 @@
+Cue text-to-video: a 10-second living version of Monet's 'Impression, Sunrise' (Le Havre harbour at dawn, rowboats, painted brush strokes, water and piano sound), generated from a text prompt only.
+https://paelus.github.io/cue-video/impression_sunrise_living.mp4
