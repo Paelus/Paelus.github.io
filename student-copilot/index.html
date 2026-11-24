@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pforzheim Student Copilot</title>
+<style>
+  :root {
+    --bg:#f4f6f5; --card:#ffffff; --ink:#14201c; --muted:#5d6b66; --line:#dde4e1;
+    --accent:#0f7a5c; --accent-soft:#e3f2ec; --warn:#b5541c; --warn-soft:#fbeee4; --wa:#1fa855;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1513; --card:#18211e; --ink:#e7efec; --muted:#9aaba5; --line:#2a3632;
+      --accent:#43c29a; --accent-soft:#16302a; --warn:#f0a06a; --warn-soft:#3a2418; --wa:#35c46c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width:1160px; margin:0 auto; padding:0 20px; }
+  header { padding:44px 0 18px; }
+  .eyebrow { color:var(--accent); font-weight:700; font-size:13px; letter-spacing:.1em; text-transform:uppercase; }
+  h1 { font-size:clamp(30px,5vw,46px); line-height:1.08; margin:8px 0 12px; letter-spacing:-.02em; }
+  .lead { color:var(--muted); max-width:720px; margin:0; font-size:17px; }
+  h2 { font-size:21px; margin:0 0 12px; }
+  .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin:22px 0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .span-4 { grid-column:span 4; } .span-5 { grid-column:span 5; } .span-7 { grid-column:span 7; } .span-8 { grid-column:span 8; } .span-12 { grid-column:span 12; }
+  .big { font-size:44px; font-weight:700; letter-spacing:-.02em; line-height:1; }
+  .muted { color:var(--muted); }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .pill { display:inline-block; padding:3px 10px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-size:13px; font-weight:600; }
+  .pill.warn { background:var(--warn-soft); color:var(--warn); }
+  .days { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:14px; }
+  .day { border:1px solid var(--line); border-radius:10px; padding:8px; text-align:center; font-size:13px; }
+  .day b { display:block; font-size:16px; }
+  ul.dl { list-style:none; padding:0; margin:0; }
+  ul.dl li { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); align-items:center; }
+  ul.dl li:last-child { border-bottom:0; }
+  ul.dl button { border:0; background:none; color:var(--muted); cursor:pointer; font-size:18px; }
+  form.add { display:grid; grid-template-columns:1fr auto auto; gap:8px; margin-top:12px; }
+  input, button.btn { font:inherit; padding:9px 12px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); min-width:0; }
+  button.btn { background:var(--accent); color:#fff; border-color:var(--accent); cursor:pointer; font-weight:600; }
+  .chat { background:#efe7dd; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; font-size:14px; }
+  @media (prefers-color-scheme: dark) { .chat { background:#0b1411; } }
+  .msg { max-width:85%; padding:8px 11px; border-radius:10px; background:#fff; color:#111b17; box-shadow:0 1px 0 #0001; white-space:pre-line; }
+  .msg.me { align-self:flex-end; background:#d9fdd3; }
+  .cmds { display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:15px; }
+  .cmds code { background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:6px; font-weight:600; white-space:nowrap; }
+  svg text { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .tech { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .tech div { border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; }
+  .tech b { display:block; color:var(--accent); font-size:12px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:2px; }
+  footer { color:var(--muted); font-size:13px; padding:10px 0 60px; }
+  @media (max-width:900px) { .span-4,.span-5,.span-7,.span-8 { grid-column:span 12; } .tech { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Final project · MMI5194 · Hochschule Pforzheim</div>
+    <h1>Pforzheim Student Copilot</h1>
+    <p class="lead">My study assistant on WhatsApp. Every weekday at 07:00 it sends one short briefing with the
+      weather, today's Mensa menu, my deadlines, events and the news I care about, and it answers
+      quick commands in between. This page is its web dashboard.</p>
+  </header>
+
+  <section class="grid">
+    <div class="card span-4" id="weather">
+      <div class="row" style="justify-content:space-between"><h2>Weather · Pforzheim</h2><span class="pill" id="wxTag">live</span></div>
+      <div class="big" id="wxNow">–</div>
+      <div class="muted" id="wxText">Loading forecast…</div>
+      <div class="days" id="wxDays"></div>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Data: Open-Meteo (no key, refreshed on load)</p>
+    </div>
+
+    <div class="card span-4">
+      <div class="row" style="justify-content:space-between"><h2>Deadlines</h2><span class="pill warn" id="dlNext">–</span></div>
+      <ul class="dl" id="dlList"></ul>
+      <form class="add" id="dlForm">
+        <input id="dlTask" placeholder="Task" required aria-label="Task">
+        <input id="dlDate" type="date" required aria-label="Due date">
+        <button class="btn" type="submit">Add</button>
+      </form>
+      <p class="muted" style="font-size:12px;margin:10px 0 0">Saved in this browser. On WhatsApp: <b>deadline &lt;task&gt; &lt;date&gt;</b></p>
+    </div>
+
+    <div class="card span-4">
+      <h2>Morning brief preview</h2>
+      <div class="chat" id="brief" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card span-7">
+      <h2>How it works</h2>
+      <svg viewBox="0 0 640 300" width="100%" role="img" aria-label="Architecture: WhatsApp to Cue agent with skills, automation and sources">
+        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+        <g style="color:var(--muted)" stroke="currentColor" stroke-width="1.6" fill="none" marker-end="url(#a)">
+          <path d="M120 150 H200"/><path d="M200 165 H120"/>
+          <path d="M400 110 H470"/><path d="M400 150 H470"/><path d="M400 190 H470"/><path d="M400 230 H470"/>
+          <path d="M300 60 V95"/>
+        </g>
+        <g font-size="13">
+          <rect x="10" y="120" width="110" height="60" rx="12" fill="var(--wa)"/>
+          <text x="65" y="146" text-anchor="middle" fill="#fff" font-weight="700">WhatsApp</text>
+          <text x="65" y="164" text-anchor="middle" fill="#fff">my phone</text>
+
+          <rect x="200" y="20" width="200" height="40" rx="10" fill="var(--warn-soft)" stroke="var(--warn)"/>
+          <text x="300" y="45" text-anchor="middle" fill="var(--warn)" font-weight="700">Automation · weekdays 07:00</text>
+
+          <rect x="200" y="95" width="200" height="160" rx="14" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="300" y="122" text-anchor="middle" fill="var(--accent)" font-weight="700">Cue agent "Cosmo"</text>
+          <text x="300" y="150" text-anchor="middle" fill="var(--ink)">skill: student-copilot</text>
+          <text x="300" y="172" text-anchor="middle" fill="var(--ink)">skill: daily-news-briefing</text>
+          <text x="300" y="194" text-anchor="middle" fill="var(--ink)">memory: deadlines, topics</text>
+          <text x="300" y="216" text-anchor="middle" fill="var(--muted)">web search + cloud computer</text>
+
+          <g fill="var(--card)" stroke="var(--line)">
+            <rect x="470" y="92" width="160" height="34" rx="8"/><rect x="470" y="132" width="160" height="34" rx="8"/>
+            <rect x="470" y="172" width="160" height="34" rx="8"/><rect x="470" y="212" width="160" height="34" rx="8"/>
+          </g>
+          <g fill="var(--ink)" text-anchor="middle">
+            <text x="550" y="114">Weather forecast</text><text x="550" y="154">Studierendenwerk menu</text>
+            <text x="550" y="194">Pforzheim / HS events</text><text x="550" y="234">News (Reuters, BBC …)</text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="card span-5">
+      <h2>WhatsApp commands</h2>
+      <div class="cmds">
+        <code>brief</code><span>full morning briefing now</span>
+        <code>deadline &lt;task&gt; &lt;date&gt;</code><span>save a deadline</span>
+        <code>deadlines</code><span>list open deadlines with days left</span>
+        <code>done &lt;task&gt;</code><span>remove a deadline</span>
+        <code>remind &lt;text&gt; &lt;time&gt;</code><span>one-time reminder</span>
+        <code>mensa</code><span>today's canteen menu (with source)</span>
+        <code>weather</code><span>forecast for the bike/bus ride</span>
+        <code>topics</code><span>choose news topics</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:22px">
+    <h2>Course techniques combined</h2>
+    <div class="tech">
+      <div><b>Agent</b>Cue agent with its own cloud computer (Unit 6)</div>
+      <div><b>Skills</b>own skills: student-copilot + daily-news-briefing (6-7)</div>
+      <div><b>Scheduled task</b>weekday 07:00 automation, like the Gemini/ChatGPT scheduled tasks (4-6, 5-2)</div>
+      <div><b>Messenger</b>WhatsApp channel, as with Hermes (5-8, 6-2)</div>
+      <div><b>Memory</b>deadlines and news topics persist between chats</div>
+      <div><b>Web + chatbot</b>this dashboard and the n8n site chatbot (5-10), bottom right</div>
+      <div><b>Grounding</b>menu, events and news always with source, nothing invented</div>
+      <div><b>Privacy</b>no WhatsApp Web login on the cloud computer; deadlines stay in the browser here</div>
+    </div>
+  </section>
+
+  <footer>Built for MMI5194 "The New Frontiers of AI" · Pascal Müller · weather data © Open-Meteo.com (CC BY 4.0)</footer>
+</div>
+
+<script>
+(() => {
+  // ---------- deadlines (localStorage, per viewer) ----------
+  const KEY = 'copilot.deadlines.v1';
+  const seed = [
+    { task: 'Final project presentation MMI5194', date: '2026-11-27' },
+    { task: 'Final project submission unit6_11 (12:00)', date: '2026-12-04' }
+  ];
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || seed; } catch { return seed; } };
+  const save = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+  let dls = load();
+  const today = () => { const t = new Date(); t.setHours(0,0,0,0); return t; };
+  const daysLeft = iso => Math.round((new Date(iso + 'T00:00:00') - today()) / 864e5);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function renderDl() {
+    dls.sort((a, b) => a.date.localeCompare(b.date));
+    const ul = document.getElementById('dlList');
+    ul.innerHTML = dls.map((d, i) => {
+      const n = daysLeft(d.date);
+      const tag = n < 0 ? 'overdue' : n === 0 ? 'today' : n + ' d';
+      return `<li><span>${esc(d.task)}<br><span class="muted" style="font-size:13px">${new Date(d.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })}</span></span>
+        <span class="row"><span class="pill ${n <= 3 ? 'warn' : ''}">${tag}</span><button aria-label="Mark done" data-i="${i}">✓</button></span></li>`;
+    }).join('') || '<li class="muted">No open deadlines 🎉</li>';
+    const next = dls.find(d => daysLeft(d.date) >= 0);
+    document.getElementById('dlNext').textContent = next ? 'next in ' + daysLeft(next.date) + ' d' : 'all clear';
+    renderBrief();
+  }
+  document.getElementById('dlList').addEventListener('click', e => {
+    const i = e.target.dataset.i; if (i === undefined) return;
+    dls.splice(+i, 1); save(dls); renderDl();
+  });
+  document.getElementById('dlForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const task = document.getElementById('dlTask').value.trim(), date = document.getElementById('dlDate').value;
+    if (!task || !date) return;
+    dls.push({ task, date }); save(dls); e.target.reset(); renderDl();
+  });
+
+  // ---------- weather (Open-Meteo) ----------
+  const WMO = c => c === 0 ? ['☀️','clear'] : c <= 2 ? ['🌤️','partly cloudy'] : c === 3 ? ['☁️','overcast'] : c <= 48 ? ['🌫️','fog']
+    : c <= 57 ? ['🌦️','drizzle'] : c <= 67 ? ['🌧️','rain'] : c <= 77 ? ['🌨️','snow'] : c <= 82 ? ['🌧️','showers'] : ['⛈️','thunderstorm'];
+  let wx = null;
+  function wear(min, rain) {
+    const parts = [];
+    parts.push(min < 2 ? 'winter jacket, gloves' : min < 10 ? 'warm jacket' : min < 16 ? 'light jacket' : 't-shirt weather');
+    if (rain >= 50) parts.push('take the bus or a rain jacket'); else if (rain >= 25) parts.push('umbrella just in case');
+    return parts.join(' · ');
+  }
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=48.8922&longitude=8.6946&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FBerlin&forecast_days=5')
+    .then(r => r.json()).then(d => {
+      wx = d;
+      const [ico, txt] = WMO(d.current.weather_code);
+      document.getElementById('wxNow').textContent = ico + ' ' + Math.round(d.current.temperature_2m) + '°';
+      const mn = Math.round(d.daily.temperature_2m_min[0]), mx = Math.round(d.daily.temperature_2m_max[0]), rp = d.daily.precipitation_probability_max[0];
+      document.getElementById('wxText').textContent = `${txt} · today ${mn}° to ${mx}° · rain ${rp}% · ${wear(mn, rp)}`;
+      document.getElementById('wxDays').innerHTML = d.daily.time.map((t, i) => {
+        const day = i === 0 ? 'Today' : new Date(t + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short' });
+        return `<div class="day">${day}<b>${WMO(d.daily.weather_code[i])[0]}</b>${Math.round(d.daily.temperature_2m_min[i])}°/${Math.round(d.daily.temperature_2m_max[i])}°</div>`;
+      }).join('');
+      renderBrief();
+    }).catch(() => {
+      document.getElementById('wxTag').textContent = 'offline';
+      document.getElementById('wxText').textContent = 'Forecast not reachable right now.';
+    });
+
+  // ---------- brief preview ----------
+  function renderBrief() {
+    const box = document.getElementById('brief');
+    const date = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+    let w = '🌤️ Weather: loading…';
+    if (wx) {
+      const mn = Math.round(wx.daily.temperature_2m_min[0]), mx = Math.round(wx.daily.temperature_2m_max[0]), rp = wx.daily.precipitation_probability_max[0];
+      w = `${WMO(wx.daily.weather_code[0])[0]} Weather: ${mn}° to ${mx}°, rain ${rp}% → ${wear(mn, rp)}`;
+    }
+    const soon = dls.filter(d => { const n = daysLeft(d.date); return n >= 0 && n <= 7; })
+      .map(d => `• ${d.task}: ${daysLeft(d.date) === 0 ? 'today' : daysLeft(d.date) + ' days left'}`).join('\n') || '• nothing due this week';
+    box.innerHTML = `<div class="msg me">brief</div>
+      <div class="msg">☀️ Good morning, ${date}\n\n${esc(w)}\n🍽️ Mensa: today's menu from the Studierendenwerk site (live on WhatsApp)\n📌 Deadlines (7 days):\n${esc(soon)}\n📅 Events + 📰 2 news stories (live on WhatsApp)</div>`;
+  }
+
+  renderDl();
+})();
+</script>
+<script src="../chatbot.js"></script>
+</body>
+</html>
