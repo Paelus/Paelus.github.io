@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Sales Report</title>
+<meta name="description" content="Weekly sales report dashboard: this week vs last week, built from 8 weeks of sales data (Sep–Oct 2026).">
+<style>
+  :root{--bg:#f3f5f9;--card:#fff;--ink:#141b2d;--muted:#5d6678;--line:#e3e7ef;--blue:#2563eb;--grey:#9aa3b2;--up:#15803d;--down:#c2410c;--soft:#eef3ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 18px 48px}
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px}
+  h1{font-size:30px;margin:0;letter-spacing:-.01em}
+  .sub{color:var(--muted);margin:4px 0 0}
+  label{font-size:13px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
+  select{font:inherit;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:16px}
+  .card h2{font-size:18px;margin:0 0 12px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .kpi{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fafbfd}
+  .kpi .k{font-size:13px;color:var(--muted)}
+  .kpi .v{font-size:26px;font-weight:800;margin:2px 0}
+  .d{font-size:14px;font-weight:600}.d.up{color:var(--up)}.d.down{color:var(--down)}.d.flat{color:var(--muted)}
+  .headline{background:var(--soft);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:15px}
+  .row{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+  .row3{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  svg text{font-family:inherit}
+  .legend{display:flex;gap:18px;font-size:13px;color:var(--muted);margin-bottom:6px}
+  .legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  .note{font-size:13px;color:var(--muted);margin:8px 0 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+  th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  ul.ins{margin:0;padding-left:18px}ul.ins li{margin:4px 0}
+  .mail{white-space:pre-wrap;font:13.5px/1.55 ui-monospace,Consolas,monospace;background:#0f172a;color:#e5e7eb;border-radius:12px;padding:16px 18px;margin:0}
+  .mail b{color:#93c5fd;font-weight:600}
+  .btn{font:inherit;font-weight:600;border:0;background:var(--blue);color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer;margin-top:10px}
+  footer{color:var(--muted);font-size:12.5px;margin-top:10px}
+  @media (max-width:860px){.kpis{grid-template-columns:1fr 1fr}.row,.row3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Weekly Sales Report</h1>
+      <p class="sub" id="period"></p>
+    </div>
+    <div><label for="week">Report week</label><select id="week"></select></div>
+  </header>
+
+  <section class="card">
+    <h2>Key indicators</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="headline" id="headline"></div>
+  </section>
+
+  <div class="row">
+    <section class="card">
+      <h2>Daily revenue, this week vs last week (TWD)</h2>
+      <div class="legend"><span><i style="background:var(--grey)"></i><span id="lgLast"></span></span><span><i style="background:var(--blue)"></i><span id="lgThis"></span></span></div>
+      <svg id="daily" viewBox="0 0 640 300" width="100%" role="img" aria-label="Daily revenue chart"></svg>
+      <p class="note" id="dailyNote"></p>
+    </section>
+    <section class="card">
+      <h2>8-week revenue trend (TWD)</h2>
+      <svg id="trend" viewBox="0 0 420 300" width="100%" role="img" aria-label="Weekly revenue trend"></svg>
+    </section>
+  </div>
+
+  <div class="row3">
+    <section class="card"><h2>By product</h2><table id="byProduct"></table></section>
+    <section class="card"><h2>By region</h2><table id="byRegion"></table></section>
+  </div>
+
+  <div class="row3">
+    <section class="card"><h2>Insights</h2><ul class="ins" id="insights"></ul></section>
+    <section class="card"><h2>Email draft</h2><pre class="mail" id="mail"></pre><button class="btn" id="copy">Copy email text</button></section>
+  </div>
+
+  <footer>Data: “Weekly Report Sales Data (Sep–Oct 2026)”, 72 simulated orders, revenue in TWD. All figures are calculated in the page from the raw orders. Course demo, MMI5194 HS Pforzheim.</footer>
+</div>
+<script>
+const DATA = [["2026-09-07","Cloud Service Plan","North","John Smith",8,180000,"ORD-001"],["2026-09-08","Cloud Service Plan","Central","Emily Davis",9,190000,"ORD-002"],["2026-09-09","Cloud Service Plan","South","Michael Brown",9,190000,"ORD-003"],["2026-09-10","AI Consulting Service","North","Sarah Johnson",10,270000,"ORD-004"],["2026-09-11","AI Consulting Service","Central","John Smith",9,250000,"ORD-005"],["2026-09-12","AI Consulting Service","South","Emily Davis",8,230000,"ORD-006"],["2026-09-13","Corporate Training Course","North","Michael Brown",9,110000,"ORD-007"],["2026-09-07","Corporate Training Course","Central","Sarah Johnson",9,110000,"ORD-008"],["2026-09-09","Corporate Training Course","South","John Smith",10,120000,"ORD-009"],["2026-09-14","Cloud Service Plan","North","John Smith",9,200000,"ORD-010"],["2026-09-15","Cloud Service Plan","Central","Emily Davis",10,210000,"ORD-011"],["2026-09-16","Cloud Service Plan","South","Michael Brown",10,210000,"ORD-012"],["2026-09-17","AI Consulting Service","North","Sarah Johnson",11,310000,"ORD-013"],["2026-09-18","AI Consulting Service","Central","John Smith",10,280000,"ORD-014"],["2026-09-19","AI Consulting Service","South","Emily Davis",10,290000,"ORD-015"],["2026-09-20","Corporate Training Course","North","Michael Brown",9,110000,"ORD-016"],["2026-09-14","Corporate Training Course","Central","Sarah Johnson",10,120000,"ORD-017"],["2026-09-16","Corporate Training Course","South","John Smith",10,120000,"ORD-018"],["2026-09-21","Cloud Service Plan","North","John Smith",10,230000,"ORD-019"],["2026-09-22","Cloud Service Plan","Central","Emily Davis",10,230000,"ORD-020"],["2026-09-23","Cloud Service Plan","South","Michael Brown",11,240000,"ORD-021"],["2026-09-24","AI Consulting Service","North","Sarah Johnson",13,360000,"ORD-022"],["2026-09-25","AI Consulting Service","Central","John Smith",12,340000,"ORD-023"],["2026-09-26","AI Consulting Service","South","Emily Davis",12,350000,"ORD-024"],["2026-09-27","Corporate Training Course","North","Michael Brown",11,130000,"ORD-025"],["2026-09-21","Corporate Training Course","Central","Sarah Johnson",11,130000,"ORD-026"],["2026-09-23","Corporate Training Course","South","John Smith",12,140000,"ORD-027"],["2026-09-28","Cloud Service Plan","North","John Smith",13,290000,"ORD-028"],["2026-09-29","Cloud Service Plan","Central","Emily Davis",14,300000,"ORD-029"],["2026-09-30","Cloud Service Plan","South","Michael Brown",13,290000,"ORD-030"],["2026-10-01","AI Consulting Service","North","Sarah Johnson",18,490000,"ORD-031"],["2026-10-02","AI Consulting Service","Central","John Smith",16,460000,"ORD-032"],["2026-10-03","AI Consulting Service","South","Emily Davis",18,500000,"ORD-033"],["2026-10-04","Corporate Training Course","North","Michael Brown",12,150000,"ORD-034"],["2026-09-28","Corporate Training Course","Central","Sarah Johnson",13,160000,"ORD-035"],["2026-09-30","Corporate Training Course","South","John Smith",13,160000,"ORD-036"],["2026-10-05","Cloud Service Plan","North","John Smith",14,300000,"ORD-037"],["2026-10-06","Cloud Service Plan","Central","Emily Davis",14,310000,"ORD-038"],["2026-10-07","Cloud Service Plan","South","Michael Brown",14,310000,"ORD-039"],["2026-10-08","AI Consulting Service","North","Sarah Johnson",19,530000,"ORD-040"],["2026-10-09","AI Consulting Service","Central","John Smith",18,500000,"ORD-041"],["2026-10-10","AI Consulting Service","South","Emily Davis",19,530000,"ORD-042"],["2026-10-11","Corporate Training Course","North","Michael Brown",12,150000,"ORD-043"],["2026-10-05","Corporate Training Course","Central","Sarah Johnson",13,160000,"ORD-044"],["2026-10-07","Corporate Training Course","South","John Smith",13,160000,"ORD-045"],["2026-10-12","Cloud Service Plan","North","John Smith",12,270000,"ORD-046"],["2026-10-13","Cloud Service Plan","Central","Emily Davis",12,270000,"ORD-047"],["2026-10-14","Cloud Service Plan","South","Michael Brown",13,280000,"ORD-048"],["2026-10-15","AI Consulting Service","North","Sarah Johnson",16,460000,"ORD-049"],["2026-10-16","AI Consulting Service","Central","John Smith",16,440000,"ORD-050"],["2026-10-17","AI Consulting Service","South","Emily Davis",16,450000,"ORD-051"],["2026-10-18","Corporate Training Course","North","Michael Brown",12,140000,"ORD-052"],["2026-10-12","Corporate Training Course","Central","Sarah Johnson",12,140000,"ORD-053"],["2026-10-14","Corporate Training Course","South","John Smith",12,150000,"ORD-054"],["2026-10-19","Cloud Service Plan","North","John Smith",6,140000,"ORD-055"],["2026-10-20","Cloud Service Plan","Central","Emily Davis",7,150000,"ORD-056"],["2026-10-21","Cloud Service Plan","South","Michael Brown",6,130000,"ORD-057"],["2026-10-22","AI Consulting Service","North","Sarah Johnson",18,500000,"ORD-058"],["2026-10-23","AI Consulting Service","Central","John Smith",14,400000,"ORD-059"],["2026-10-24","AI Consulting Service","South","Emily Davis",19,540000,"ORD-060"],["2026-10-25","Corporate Training Course","North","Michael Brown",8,100000,"ORD-061"],["2026-10-19","Corporate Training Course","Central","Sarah Johnson",8,100000,"ORD-062"],["2026-10-21","Corporate Training Course","South","John Smith",10,120000,"ORD-063"],["2026-10-26","Cloud Service Plan","North","John Smith",4,90000,"ORD-064"],["2026-10-27","Cloud Service Plan","Central","Emily Davis",9,200000,"ORD-065"],["2026-10-28","Cloud Service Plan","South","Michael Brown",4,80000,"ORD-066"],["2026-10-29","AI Consulting Service","North","Sarah Johnson",11,300000,"ORD-067"],["2026-10-30","AI Consulting Service","Central","John Smith",25,700000,"ORD-068"],["2026-10-31","AI Consulting Service","South","Emily Davis",7,190000,"ORD-069"],["2026-11-01","Corporate Training Course","North","Michael Brown",2,30000,"ORD-070"],["2026-10-26","Corporate Training Course","Central","Sarah Johnson",7,80000,"ORD-071"],["2026-10-28","Corporate Training Course","South","John Smith",2,30000,"ORD-072"]]; // [date, product, region, salesperson, qty, revenue, orderId]
+const D = s => new Date(s + 'T00:00:00');
+const monday = d => { const x = new Date(d); const k = (x.getDay() + 6) % 7; x.setDate(x.getDate() - k); return x; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // local date, no UTC shift
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const fmtK = n => n >= 1e6 ? (n/1e6).toFixed(1) + 'M' : Math.round(n/1e3) + 'k';
+const pct = (a, b) => b ? (a - b) / b * 100 : 0;
+const day = d => d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+// ISO week number
+const isoWeek = d => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = (t.getUTCDay() + 6) % 7; t.setUTCDate(t.getUTCDate() - n + 3); const f = new Date(Date.UTC(t.getUTCFullYear(), 0, 4)); return 1 + Math.round(((t - f) / 864e5 - 3 + ((f.getUTCDay() + 6) % 7)) / 7); };
+
+const weeks = [...new Set(DATA.map(r => iso(monday(D(r[0])))))].sort();
+const sel = document.getElementById('week');
+weeks.slice(1).forEach(w => { const o = document.createElement('option'); o.value = w; const s = D(w), e = new Date(s); e.setDate(e.getDate() + 6); o.textContent = `W${isoWeek(s)} · ${day(s)} – ${day(e)}`; sel.appendChild(o); });
+sel.value = weeks[weeks.length - 1];
+
+function slice(wk){ return DATA.filter(r => iso(monday(D(r[0]))) === wk); }
+function sum(rows, i){ return rows.reduce((a, r) => a + r[i], 0); }
+function group(rows, i){ const m = {}; rows.forEach(r => m[r[i]] = (m[r[i]] || 0) + r[5]); return m; }
+function delta(a, b, money){ const d = a - b, p = pct(a, b), cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat'; const sign = d > 0 ? '+' : d < 0 ? '−' : '±'; return `<span class="d ${cls}">${sign}${money ? 'TWD ' : ''}${fmt(Math.abs(d))} (${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(1)}%)</span>`; }
+
+function render(){
+  const wk = sel.value, prev = weeks[weeks.indexOf(wk) - 1];
+  const A = slice(wk), B = slice(prev);
+  const s = D(wk), e = new Date(s); e.setDate(e.getDate() + 6);
+  const ps = D(prev), pe = new Date(ps); pe.setDate(pe.getDate() + 6);
+  document.getElementById('period').textContent = `Week ${isoWeek(s)}: ${day(s)} – ${day(e)} ${e.getFullYear()} · compared with week ${isoWeek(ps)} (${day(ps)} – ${day(pe)})`;
+  const rev = [sum(A,5), sum(B,5)], ord = [A.length, B.length], qty = [sum(A,4), sum(B,4)], aov = [rev[0]/ord[0], rev[1]/ord[1]];
+  document.getElementById('kpis').innerHTML = [
+    ['Revenue', 'TWD ' + fmt(rev[0]), delta(rev[0], rev[1], true)],
+    ['Orders', ord[0], delta(ord[0], ord[1])],
+    ['Units sold', qty[0], delta(qty[0], qty[1])],
+    ['Average order value', 'TWD ' + fmt(aov[0]), delta(aov[0], aov[1], true)]
+  ].map(([k, v, d]) => `<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div>${d}</div>`).join('');
+
+  // product / region tables
+  const tbl = (id, idx) => { const a = group(A, idx), b = group(B, idx); const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort((x, y) => (a[y]||0) - (a[x]||0));
+    document.getElementById(id).innerHTML = '<tr><th></th><th class="n">This week</th><th class="n">Last week</th><th class="n">Change</th></tr>' +
+      keys.map(k => `<tr><td>${k}</td><td class="n">${fmt(a[k]||0)}</td><td class="n">${fmt(b[k]||0)}</td><td class="n">${delta(a[k]||0, b[k]||0)}</td></tr>`).join('');
+    return {a, b, keys}; };
+  const P = tbl('byProduct', 1), R = tbl('byRegion', 2);
+
+  // daily chart
+  const daily = rows => { const v = Array(7).fill(0); rows.forEach(r => v[(D(r[0]).getDay() + 6) % 7] += r[5]); return v; };
+  const dA = daily(A), dB = daily(B), max = Math.max(...dA, ...dB) * 1.15 || 1;
+  const W = 640, H = 300, L = 54, T = 14, Bm = 36, Rm = 14, x = i => L + i * (W - L - Rm) / 6, y = v => T + (H - T - Bm) * (1 - v / max);
+  let g = '';
+  for (let k = 0; k <= 4; k++) { const v = max * k / 4; g += `<line x1="${L}" x2="${W-Rm}" y1="${y(v)}" y2="${y(v)}" stroke="#e3e7ef"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="#5d6678">${fmtK(v)}</text>`; }
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach((t, i) => g += `<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="12" fill="#5d6678">${t}</text>`);
+  const path = v => v.map((n, i) => `${i ? 'L' : 'M'}${x(i)},${y(n)}`).join('');
+  g += `<path d="${path(dB)}" fill="none" stroke="#9aa3b2" stroke-width="2.5" stroke-dasharray="6 5"/>` + dB.map((n, i) => `<circle cx="${x(i)}" cy="${y(n)}" r="4" fill="#9aa3b2"><title>Last week ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}: TWD ${fmt(n)}</title></circle>`).join('');
+  g += `<path d="${path(dA)}" fill="none" stroke="#2563eb" stroke-width="3"/>` + dA.map((n, i) => `<circle cx="${x(i)}" cy="${y(n)}" r="4.5" fill="#2563eb"><title>This week ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}: TWD ${fmt(n)}</title></circle>`).join('');
+  document.getElementById('daily').innerHTML = g;
+  document.getElementById('lgLast').textContent = `Last week (${day(ps)} to ${day(pe)})`;
+  document.getElementById('lgThis').textContent = `This week (${day(s)} to ${day(e)})`;
+  const hi = dA.indexOf(Math.max(...dA)), lo = dA.indexOf(Math.min(...dA)); const dd = i => { const t = new Date(s); t.setDate(t.getDate() + i); return t.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'short'}); };
+  const hiOrders = A.filter(r => (D(r[0]).getDay() + 6) % 7 === hi).length;
+  document.getElementById('dailyNote').textContent = `Peak day this week was ${dd(hi)} at TWD ${fmt(dA[hi])}${hiOrders === 1 ? ' from a single order' : ` from ${hiOrders} orders`}. The lowest day was ${dd(lo)} at TWD ${fmt(dA[lo])}.`;
+
+  // trend
+  const tw = weeks.map(w => sum(slice(w), 5)), tmax = Math.max(...tw) * 1.12, TW = 420, bw = (TW - 40) / tw.length;
+  let t = '';
+  tw.forEach((v, i) => { const h = (300 - 50) * v / tmax, cur = weeks[i] === wk, pr = weeks[i] === prev; t += `<rect x="${30 + i*bw + 4}" y="${300-30-h}" width="${bw-8}" height="${h}" rx="5" fill="${cur ? '#2563eb' : pr ? '#9aa3b2' : '#d5dbe6'}"><title>W${isoWeek(D(weeks[i]))}: TWD ${fmt(v)}</title></rect><text x="${30 + i*bw + bw/2}" y="${300-12}" text-anchor="middle" font-size="11" fill="#5d6678">W${isoWeek(D(weeks[i]))}</text><text x="${30 + i*bw + bw/2}" y="${300-36-h}" text-anchor="middle" font-size="10.5" fill="${cur ? '#2563eb' : '#5d6678'}" font-weight="${cur ? 700 : 400}">${fmtK(v)}</text>`; });
+  document.getElementById('trend').innerHTML = t;
+
+  // insights
+  const best = (o) => Object.entries(o.a).map(([k, v]) => [k, v - (o.b[k] || 0), pct(v, o.b[k] || 0)]).sort((m, n) => n[1] - m[1]);
+  const pr = best(P), rg = best(R);
+  const share = P.keys[0] ? (P.a[P.keys[0]] / rev[0] * 100).toFixed(0) : 0;
+  const peakWeek = weeks[tw.indexOf(Math.max(...tw))];
+  const ins = [
+    `Revenue ${rev[0] >= rev[1] ? 'rose' : 'fell'} ${Math.abs(pct(rev[0], rev[1])).toFixed(1)}% to TWD ${fmt(rev[0])} with ${ord[0] === ord[1] ? 'the same number of' : (ord[0] > ord[1] ? 'more' : 'fewer')} orders (${ord[0]}), so the change comes from ${ord[0] === ord[1] ? 'order size, not order count' : 'both order count and order size'}.`,
+    `${P.keys[0]} is the largest product at ${share}% of revenue. Largest loss in TWD: ${pr[pr.length-1][0]} (−${fmt(Math.abs(pr[pr.length-1][1]))}); steepest drop: ${[...pr].sort((m, n) => m[2] - n[2])[0][0]} (${[...pr].sort((m, n) => m[2] - n[2])[0][2].toFixed(1)}%).`,
+    `Strongest region: ${rg[0][0]} (${rg[0][2] >= 0 ? '+' : ''}${rg[0][2].toFixed(1)}%); weakest: ${rg[rg.length-1][0]} (${rg[rg.length-1][2].toFixed(1)}%).`,
+    `${tw[weeks.indexOf(wk)] < Math.max(...tw) ? `Revenue has been below the W${isoWeek(D(peakWeek))} peak (TWD ${fmt(Math.max(...tw))}) since then.` : 'This is the best week of the period.'}`
+  ];
+  document.getElementById('insights').innerHTML = ins.map(s => `<li>${s}</li>`).join('');
+  document.getElementById('headline').innerHTML = `<b>Headline:</b> ${ins[0]}`;
+
+  // email
+  const subj = `Weekly sales report W${isoWeek(s)} (${day(s)} – ${day(e)}): revenue TWD ${fmt(rev[0])}, ${pct(rev[0], rev[1]) >= 0 ? '+' : '−'}${Math.abs(pct(rev[0], rev[1])).toFixed(1)}% vs last week`;
+  document.getElementById('mail').innerHTML = `<b>Subject:</b> ${subj}\n\nHi team,\n\nhere is the sales summary for week ${isoWeek(s)}:\n\n- Revenue: TWD ${fmt(rev[0])} (last week TWD ${fmt(rev[1])}, ${pct(rev[0], rev[1]).toFixed(1)}%)\n- Orders: ${ord[0]} (last week ${ord[1]})\n- Units sold: ${qty[0]} (last week ${qty[1]})\n- Average order value: TWD ${fmt(aov[0])}\n\nKey points:\n${ins.slice(1).map(s => '- ' + s).join('\n')}\n\nThe full dashboard with charts is linked below.\n\nBest regards`;
+}
+sel.addEventListener('change', render);
+document.getElementById('copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(document.getElementById('mail').innerText); document.getElementById('copy').textContent = 'Copied'; } catch (e) { document.getElementById('copy').textContent = 'Select the text to copy'; } });
+render();
+</script>
+</body>
+</html>

@@ -1,2 +1,2 @@
-Meta Muse
-https://drluarn.github.io/
+Weekly report skill - interactive sales dashboard from the Sep-Oct 2026 data: this week vs last week KPIs, daily revenue chart, 8-week trend, product and region tables, insights and a ready email draft
+https://paelus.github.io/weekly-report/
