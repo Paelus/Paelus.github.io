@@ -1,1 +1,1 @@
-Cue: group chat with three PF analyst agents on a cup-deposit business case, weekly sales report skill run on the Excel data, Hermes Agent installed on the cloud computer, and Hermes replying on WhatsApp (self-chat, home channel set).
+Cue: group chat with three PF analyst agents on a cup-deposit business case, weekly sales report skill run on the Excel data, and chatting with my Cue agent on WhatsApp. Hermes Agent installed on the Cue cloud computer and connected to WhatsApp (web search reply, home channel set).
