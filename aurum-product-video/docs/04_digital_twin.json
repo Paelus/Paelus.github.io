@@ -1,0 +1,40 @@
+{
+  "basic_info": {
+    "name": "AURUM",
+    "tagline": "Jewellery first. Tech inside.",
+    "category": "Smart ring (sleep, stress, activity)",
+    "origin": "Designed in Pforzheim, Germany (Goldstadt)",
+    "status": "concept product - specs are targets [concept spec]",
+    "price": {"DE": "EUR 329", "US": "USD 349", "JP": "JPY 52,800"},
+    "finishes": ["brushed silver", "satin black", "gold-tone"],
+    "subscription": "none"
+  },
+  "target_customers": {
+    "primary": "Design-conscious professionals 28-45 who stopped wearing a smartwatch at night",
+    "secondary": "Gift buyers looking for a premium gift without running costs"
+  },
+  "usage_scenarios": ["morning sleep check", "office meetings", "evening run", "long-haul travel", "gift unboxing"],
+  "core_selling_points": [
+    {"point": "Looks like jewellery, not a gadget", "proof": "titanium, 2.6 mm, 3 finishes [concept spec]"},
+    {"point": "Pay once - no subscription", "proof": "all app features included [concept spec]"},
+    {"point": "Your data stays yours", "proof": "EU hosting, export, no data sale [concept spec]"},
+    {"point": "Wear it day and night", "proof": "3.8 g, 5 ATM, 7-day battery target [concept spec]"},
+    {"point": "Sizing made easy", "proof": "free sizing kit + 30-day size exchange"}
+  ],
+  "competitor_comparison": {
+    "Oura Ring 4": "health leader, monthly membership",
+    "Samsung Galaxy Ring": "best with Samsung phones",
+    "RingConn Gen 2 Air": "value price, plain design"
+  },
+  "localized_appeals": {
+    "DE": {"headline": "Schmuck zuerst. Technik im Inneren.", "tone": "calm, precise, quality and privacy", "cultural_notes": "Goldstadt Pforzheim heritage, Datenschutz", "do": "show craftsmanship, EU data", "dont": "hype, superlatives"},
+    "US": {"headline": "The smart ring that's actually a ring.", "tone": "warm, confident, gifting", "cultural_notes": "holiday season, no-subscription value", "do": "gift moment, iPhone + Android", "dont": "health or medical claims"},
+    "JP": {"headline": "上質なリングに、さりげないテクノロジー", "tone": "understated, refined", "cultural_notes": "small sizes, gift wrapping, craft story", "do": "show small sizes and packaging", "dont": "loud colours, exaggeration"}
+  },
+  "content_assets": {
+    "text": ["Jewellery first. Tech inside.", "Pay once. No subscription.", "Your data stays yours.", "Designed in Pforzheim."],
+    "image_ideas": ["macro of the ring on a goldsmith's bench", "ring on hand holding a coffee cup", "three finishes on linen"],
+    "video_moments": ["goldsmith polishing", "morning sleep score", "office handshake", "night run", "gift unboxing"]
+  },
+  "claims_to_avoid": ["diagnoses, detects or prevents any illness", "medical-grade", "most accurate", "#1", "guaranteed battery life"]
+}

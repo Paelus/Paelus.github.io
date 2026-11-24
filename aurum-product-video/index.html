@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AURUM Product Video</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+  :root { --bg:#faf8f4; --ink:#1d1b18; --muted:#6b655c; --line:#e3ddd2; --gold:#a8833a; --card:#fff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { padding:48px 24px 24px; max-width:1180px; margin:0 auto; }
+  .eyebrow { color:var(--gold); font-size:13px; letter-spacing:.12em; text-transform:uppercase; font-weight:600; }
+  h1 { font-size:clamp(30px,5vw,48px); margin:6px 0 10px; letter-spacing:-.02em; }
+  .lead { color:var(--muted); max-width:760px; margin:0; }
+  main { max-width:1180px; margin:0 auto; padding:0 24px 64px; }
+  .hero { display:grid; grid-template-columns:1.5fr 1fr; gap:24px; align-items:start; margin-top:20px; }
+  video { width:100%; border-radius:14px; background:#000; display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .pipeline { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin:28px 0; }
+  .step { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; cursor:pointer; text-align:left; font:inherit; color:inherit; }
+  .step b { display:block; color:var(--gold); font-size:12px; letter-spacing:.08em; }
+  .step[aria-selected="true"] { border-color:var(--gold); box-shadow:0 0 0 2px #a8833a33; }
+  h2 { font-size:22px; margin:36px 0 12px; }
+  #doc table, .sb table { border-collapse:collapse; width:100%; font-size:14px; }
+  #doc th, #doc td, .sb th, .sb td { border:1px solid var(--line); padding:6px 8px; vertical-align:top; text-align:left; }
+  #doc th, .sb th { background:#f1ece3; }
+  #doc pre { white-space:pre-wrap; font-size:13px; }
+  .sb { overflow-x:auto; }
+  .sb td:nth-child(4), .sb td:nth-child(5) { min-width:280px; font-size:12.5px; color:#3f3a33; }
+  .files a { color:var(--gold); }
+  .note { color:var(--muted); font-size:14px; }
+  @media (max-width:860px) { .hero { grid-template-columns:1fr; } .pipeline { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Assignment 6-10 · Multi-agent product discovery &amp; product video</div>
+  <h1>AURUM – jewellery first, tech inside</h1>
+  <p class="lead">A concept smart ring designed in Pforzheim, run through my six-agent skill
+  <em>Agentic AI Product Discovery &amp; Product Video Generator</em>: market research → customer insight →
+  product intelligence → digital twin → 12-scene video storyboard → quality review, then a 40-second product video
+  generated from four storyboard scenes.</p>
+</header>
+<main>
+  <section class="hero">
+    <video controls preload="metadata" poster="poster.png" src="aurum_product_video.mp4"></video>
+    <div class="card">
+      <h3 style="margin-top:0">Run summary</h3>
+      <div id="summary">Loading…</div>
+      <p class="files">Files: <a href="AURUM_Video_Storyboard.xlsx">storyboard (XLSX)</a> ·
+        <a href="skill/SKILL.md">SKILL.md</a> · <a href="aurum_product_video.mp4">video (MP4)</a></p>
+    </div>
+  </section>
+
+  <h2>The six agents</h2>
+  <div class="pipeline" role="tablist">
+    <button class="step" data-f="01_market_research.md" role="tab"><b>01</b>Market research</button>
+    <button class="step" data-f="02_customer_insight.md" role="tab"><b>02</b>Customer insight</button>
+    <button class="step" data-f="03_product_intelligence.md" role="tab"><b>03</b>Product intelligence</button>
+    <button class="step" data-f="04_digital_twin.json" role="tab"><b>04</b>Digital twin</button>
+    <button class="step" data-f="05_script.md" role="tab"><b>05</b>Product video</button>
+    <button class="step" data-f="06_quality_review.md" role="tab"><b>06</b>Quality review</button>
+  </div>
+  <div class="card" id="doc">Choose an agent.</div>
+
+  <h2>Storyboard · 12 scenes · 120 s · 16:9</h2>
+  <p class="note">Scenes 1/2, 3, 9 and 12 were produced as the 40-second cut above. Presenter "Mara" is a placeholder demo presenter.</p>
+  <div class="sb card" id="sb">Loading…</div>
+</main>
+<script>
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+fetch('docs/00_summary.md').then(r => r.text()).then(t => {
+  document.getElementById('summary').innerHTML = marked.parse(t.replace(/^# .*\n/, ''));
+});
+const doc = document.getElementById('doc');
+document.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.step').forEach(x => x.setAttribute('aria-selected', x === b));
+  fetch('docs/' + b.dataset.f).then(r => r.text()).then(t => {
+    doc.innerHTML = b.dataset.f.endsWith('.json')
+      ? '<pre>' + esc(JSON.stringify(JSON.parse(t), null, 2)) + '</pre>'
+      : marked.parse(t);
+  });
+}));
+document.querySelector('.step').click();
+fetch('docs/05_storyboard.json').then(r => r.json()).then(rows => {
+  const cols = [['scene','#'],['timecode','Time'],['shot','Shot'],['image_prompt','Image prompt'],['i2v_prompt','Image-to-video prompt'],['dialogue','Voice-over'],['caption','Caption'],['localization','Localization']];
+  document.getElementById('sb').innerHTML = '<table><tr>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '</tr>' +
+    rows.map(r => '<tr>' + cols.map(c => '<td>' + esc(r[c[0]]) + '</td>').join('') + '</tr>').join('') + '</table>';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+[
+ {
+  "scene": 1,
+  "timecode": "0:00-0:10",
+  "shot": "Macro of a goldsmith's bench in a Pforzheim workshop at dawn; a craftsman's hands polish a thin titanium ring.",
+  "image_prompt": "16:9, photorealistic macro shot of an old goldsmith's bench, warm morning light through a workshop window, a craftsman's hands (no face) polishing a thin brushed titanium ring with a soft cloth, fine tools and brass shavings, shallow depth of field. No text, no logos.",
+  "i2v_prompt": "Animate 10 s: slow push-in toward the ring, cloth moves in small circles, dust particles float in the light beam. Steady camera.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, slightly reflective.",
+  "dialogue": "\"In Pforzheim, they've made jewellery for 250 years.\"",
+  "caption": "DESIGNED IN PFORZHEIM",
+  "localization": "DE: mention Goldstadt; US: 'Germany's Gold City'; JP: 職人 craft angle."
+ },
+ {
+  "scene": 2,
+  "timecode": "0:10-0:20",
+  "shot": "Mara wakes up, stretches, glances at her phone showing a sleep score; the ring is visible on her hand.",
+  "image_prompt": "16:9, photorealistic, bright Scandinavian bedroom, morning light. Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger, sitting in bed, holding a smartphone whose screen shows an abstract sleep chart (no readable text), relaxed smile. No logos.",
+  "i2v_prompt": "Animate 10 s: she lifts the phone, smiles slightly, sunlight flickers through curtains. Slow lateral dolly.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice.",
+  "dialogue": "\"This one, they made for sleeping in.\"",
+  "caption": "JEWELLERY FIRST. TECH INSIDE.",
+  "localization": "JP: show smaller size variant on hand in close-up."
+ },
+ {
+  "scene": 3,
+  "timecode": "0:20-0:30",
+  "shot": "Close-up of the ring on Mara's hand around a coffee cup.",
+  "image_prompt": "16:9, photorealistic close-up, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger, both hands around a ceramic coffee cup on a wooden kitchen table, ring catching the light, steam rising. No logos, no text.",
+  "i2v_prompt": "Animate 10 s: steam rises, fingers shift slightly, light glint travels across the ring. Static camera.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, soft.",
+  "dialogue": "\"It reads my sleep and my stress - and still looks like a ring.\"",
+  "caption": "SLEEP · STRESS · ACTIVITY",
+  "localization": "Avoid medical wording in all markets."
+ },
+ {
+  "scene": 4,
+  "timecode": "0:30-0:40",
+  "shot": "Split screen: left a bulky smartwatch on a night table with a charger, right Mara asleep with the ring.",
+  "image_prompt": "16:9, photorealistic split-screen. Left half: a generic black smartwatch on a night table with a tangled charging cable, cool light. Right half: Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger, asleep under a white duvet, hand with the ring resting on the pillow, warm light. Thin vertical divider. No logos.",
+  "i2v_prompt": "Animate 10 s: left side stays still and slightly desaturated; right side gentle breathing motion. Static camera.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, light and playful.",
+  "dialogue": "\"No bulky watch in bed. Just this.\"",
+  "caption": "3.8 g. 2.6 mm THIN.",
+  "localization": "US: keep the comparison generic, no competitor brands."
+ },
+ {
+  "scene": 5,
+  "timecode": "0:40-0:50",
+  "shot": "Office: Mara in a meeting, handshake, ring visible as jewellery.",
+  "image_prompt": "16:9, photorealistic modern office with glass walls, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger now wearing a camel blazer over the sweater, shaking hands with a colleague (face out of focus), ring visible. No logos, no text.",
+  "i2v_prompt": "Animate 10 s: handshake, slight nod, camera slowly arcs 10 degrees around the hands.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, confident.",
+  "dialogue": "\"From the meeting room…\"",
+  "caption": "LOOKS LIKE JEWELLERY",
+  "localization": "JP: bow instead of handshake for JP cut."
+ },
+ {
+  "scene": 6,
+  "timecode": "0:50-1:00",
+  "shot": "Evening run along the Enz river in Pforzheim at dusk.",
+  "image_prompt": "16:9, photorealistic, riverside path at dusk with trees and soft city lights, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger in black running gear, mid-stride, ring hand visible, motion energy. No logos.",
+  "i2v_prompt": "Animate 10 s: she runs past camera, tracking shot following her for 3 seconds, then she slows down. Natural motion blur.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, slightly breathless energy.",
+  "dialogue": "\"…to the evening run.\"",
+  "caption": "5 ATM · 7-DAY BATTERY TARGET",
+  "localization": "Battery stated as target in all markets."
+ },
+ {
+  "scene": 7,
+  "timecode": "1:00-1:10",
+  "shot": "Phone screen on a table: app with sleep and recovery trends, abstract graphs.",
+  "image_prompt": "16:9, photorealistic overhead shot of a smartphone on a linen table next to the ring, screen shows abstract clean graphs in soft green and gold, no readable numbers or text.",
+  "i2v_prompt": "Animate 10 s: subtle screen glow, slow top-down rotation of 5 degrees.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, explanatory.",
+  "dialogue": "\"Every feature in the app is included.\"",
+  "caption": "PAY ONCE. NO SUBSCRIPTION.",
+  "localization": "US: stress 'no monthly fee'; DE: 'keine Abo-Kosten'."
+ },
+ {
+  "scene": 8,
+  "timecode": "1:10-1:20",
+  "shot": "Abstract visual: data stays in a glowing EU-shaped boundary; Mara locks her phone.",
+  "image_prompt": "16:9, photorealistic, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger at a café table locking her smartphone, soft bokeh, a subtle golden glow around the phone suggesting protection. No text, no flags, no logos.",
+  "i2v_prompt": "Animate 10 s: she taps lock, glow softens, she puts the phone down and smiles.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, reassuring.",
+  "dialogue": "\"Your data stays in the EU. And it stays yours.\"",
+  "caption": "YOUR DATA STAYS YOURS",
+  "localization": "DE: Datenschutz is the strongest message; JP: keep short."
+ },
+ {
+  "scene": 9,
+  "timecode": "1:20-1:30",
+  "shot": "Three finishes laid on linen: brushed silver, satin black, gold-tone.",
+  "image_prompt": "16:9, photorealistic product flat-lay, three thin smart rings (brushed silver, satin black, gold-tone) on natural linen, soft daylight, small shadows. No logos, no text.",
+  "i2v_prompt": "Animate 10 s: slow left-to-right pan, light glint moves across each ring in turn.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, warm.",
+  "dialogue": "\"Three finishes. Sizes from five to thirteen.\"",
+  "caption": "SILVER · BLACK · GOLD-TONE",
+  "localization": "JP: highlight small sizes; US: gift colours."
+ },
+ {
+  "scene": 10,
+  "timecode": "1:30-1:40",
+  "shot": "Sizing kit unboxing: Mara tries a plastic sizer at home.",
+  "image_prompt": "16:9, photorealistic close-up, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger at home trying a simple plastic sizing ring from a small kraft-paper box, relaxed. No text, no logos.",
+  "i2v_prompt": "Animate 10 s: she slides the sizer on, nods, puts it back. Static camera.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, friendly.",
+  "dialogue": "\"Free sizing kit. Thirty days to swap your size.\"",
+  "caption": "FREE SIZING · 30-DAY EXCHANGE",
+  "localization": "US/DE: returns policy per local law [to verify]."
+ },
+ {
+  "scene": 11,
+  "timecode": "1:40-1:50",
+  "shot": "Gift moment: partner opens an elegant box with the gold-tone ring.",
+  "image_prompt": "16:9, photorealistic, cosy living room with warm lamps, a person's hands (face out of frame) opening an elegant dark-green box with a gold-tone ring inside, Mara, placeholder demo presenter - European woman, late 20s, shoulder-length dark-blonde hair tucked behind one ear, light natural make-up, cream ribbed knit sweater, wearing a thin brushed-silver titanium smart ring on her right index finger watching and smiling in the background, soft focus. No text, no logos.",
+  "i2v_prompt": "Animate 10 s: lid opens slowly, soft light reveals the ring, Mara smiles. Gentle push-in.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, heartfelt.",
+  "dialogue": "\"Made to be worn. Made to be given.\"",
+  "caption": "THE GIFT THAT'S ACTUALLY JEWELLERY",
+  "localization": "JP: wrapping and noshi-style gift paper [to verify]."
+ },
+ {
+  "scene": 12,
+  "timecode": "1:50-2:00",
+  "shot": "End card: ring on the goldsmith's bench again, logo-free title space.",
+  "image_prompt": "16:9, photorealistic macro, the finished ring standing upright on the goldsmith's bench from scene 1, warm light, empty dark space on the right for a title. No text in the image.",
+  "i2v_prompt": "Animate 10 s: very slow pull-back, light dims to a warm glow. Static otherwise.",
+  "voice_prompt": "Warm, calm, confident female English voice, late 20s, neutral accent, unhurried pace, light smile in the voice, calm closing.",
+  "dialogue": "\"AURUM. Jewellery first. Tech inside.\"",
+  "caption": "AURUM · aurum-ring.example",
+  "localization": "End card per market: DE/EN/JP tagline; price only where legally clear [to verify]."
+ }
+]

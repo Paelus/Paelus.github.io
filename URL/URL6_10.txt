@@ -1,0 +1,2 @@
+Multi-agent skill 'Agentic AI Product Discovery & Product Video Generator' (six agents: market research, customer insight, product intelligence, digital twin, product video, quality review) run on AURUM, a concept smart ring designed in Pforzheim: 12-scene storyboard (XLSX) and a 40-second product video made from four scenes.
+https://paelus.github.io/aurum-product-video/
