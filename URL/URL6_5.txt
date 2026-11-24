@@ -1,2 +1,1 @@
-Grok bot
-https://drluarn.github.io/
+Grok Bot - submission not required for this assignment
