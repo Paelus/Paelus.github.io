@@ -1,0 +1,2 @@
+Final project - Pforzheim Student Copilot: my WhatsApp study assistant built from a Cue agent, my own skills and a weekday 07:00 automation. Every morning it sends weather, the Mensa menu, my deadlines, Pforzheim events and news (all with sources), and it answers commands like 'deadline', 'mensa' and 'remind'. Web dashboard with live weather and a deadline tracker.
+https://paelus.github.io/student-copilot/
