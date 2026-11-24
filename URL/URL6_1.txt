@@ -1,2 +1,2 @@
-Weekly report skill - interactive sales dashboard from the Sep-Oct 2026 data: this week vs last week KPIs, daily revenue chart, 8-week trend, product and region tables, insights and a ready email draft
+Personal AI agent tasks - my avatar video (my character as a wuxia swordsman flying over a sea of clouds, from one photo and a text prompt) and a weekly report skill dashboard: this week vs last week KPIs, daily revenue, 8-week trend, insights and email draft
 https://paelus.github.io/weekly-report/
