@@ -50,6 +50,16 @@
   .tech div { border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; }
   .tech b { display:block; color:var(--accent); font-size:12px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:2px; }
   footer { color:var(--muted); font-size:13px; padding:10px 0 60px; }
+  .steps { margin:14px 0 0; padding-left:22px; display:grid; gap:16px; }
+  .steps li { padding-left:4px; }
+  .steps a { color:var(--accent); }
+  button.copy { font:inherit; font-size:14px; font-weight:600; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; margin:3px 4px 3px 0; }
+  button.copy.btnish { background:var(--accent); color:#fff; white-space:nowrap; }
+  button.copy.done { background:var(--accent); color:#fff; }
+  button.linkbtn { font:inherit; background:none; border:0; color:var(--accent); text-decoration:underline; cursor:pointer; padding:0; }
+  .copyrow { display:flex; gap:10px; align-items:flex-start; margin:8px 0 4px; }
+  .copyrow code { flex:1; min-width:0; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px; overflow-wrap:anywhere; }
+  @media (max-width:600px) { .copyrow { flex-direction:column; } }
   @media (max-width:900px) { .span-4,.span-5,.span-7,.span-8 { grid-column:span 12; } .tech { grid-template-columns:repeat(2,1fr); } }
 </style>
 </head>
@@ -61,6 +71,7 @@
     <p class="lead">My study assistant on WhatsApp. Every weekday at 07:00 it sends one short briefing with the
       weather, today's Mensa menu, my deadlines, events and the news I care about, and it answers
       quick commands in between. This page is its web dashboard.</p>
+    <p style="margin:14px 0 0"><a class="btn" href="#build-your-own" style="display:inline-block;text-decoration:none;padding:10px 16px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600">Build your own in 10 minutes ↓</a></p>
   </header>
 
   <section class="grid">
@@ -138,6 +149,32 @@
         <code>topics</code><span>choose news topics</span>
       </div>
     </div>
+  </section>
+
+  <section class="card setup" id="build-your-own" style="margin-bottom:22px">
+    <div class="row" style="justify-content:space-between"><h2>Build your own copilot</h2><span class="pill">about 10 minutes</span></div>
+    <p class="muted" style="margin:0 0 6px">Everything below is one click to copy. You get your own agent on your own WhatsApp; nothing is shared with mine.</p>
+    <ol class="steps">
+      <li><b>Install Cue and sign up</b> with your phone number. Invite code:
+        <button class="copy" data-copy="MEETCUE">MEETCUE</button>
+        <span class="muted">· Windows: <a href="https://apps.microsoft.com/detail/9pdxfbwzntnj" target="_blank" rel="noopener">Microsoft Store</a>, Mac / iOS / Android: search “Cue” in your app store.</span></li>
+      <li><b>Create your agent</b> (any name), then open its profile → <i>Messenger</i> → <i>WhatsApp</i> → <i>Connect</i>. Scan the QR code with your <b>phone camera</b> and send the pre-filled message. In the same menu (⋯) turn on <i>Receive all replies</i>.</li>
+      <li><b>Add the skill</b>: Settings → Skills → Add → <i>Import from GitHub</i>, paste this link:
+        <div class="copyrow"><code id="skillUrl">https://github.com/Paelus/Paelus.github.io/tree/main/student-copilot/pforzheim-student-copilot</code>
+        <button class="copy btnish" data-copy-from="skillUrl">Copy link</button></div>
+        <span class="muted">No GitHub import? <a href="pforzheim-student-copilot/SKILL.md" target="_blank">Open SKILL.md</a>, <button class="linkbtn" id="copySkill">copy the whole skill</button> and send it to your agent with “Please save this as a skill”.</span></li>
+      <li><b>Schedule the morning brief</b>: send this to your agent in Cue:
+        <div class="copyrow"><code id="autoPrompt">Create a weekday automation at 07:00 Europe/Berlin named "Student Copilot – morning brief" that runs my pforzheim-student-copilot skill and sends the brief to me via WhatsApp. Then run "brief" once now as a test.</code>
+        <button class="copy btnish" data-copy-from="autoPrompt">Copy prompt</button></div></li>
+      <li><b>Test it on WhatsApp</b> (in the chat with your agent):
+        <button class="copy" data-copy="brief">brief</button>
+        <button class="copy" data-copy="mensa">mensa</button>
+        <button class="copy" data-copy="deadline Marketing paper next Friday">deadline Marketing paper next Friday</button>
+        <button class="copy" data-copy="deadlines">deadlines</button>
+        <button class="copy" data-copy="topics 2 3 6">topics 2 3 6</button></li>
+      <li><b>Keep it alive:</b> reply to the brief once a day (a 👍 is enough). WhatsApp only lets a service write within 24 h of your last message.</li>
+    </ol>
+    <p class="muted" style="font-size:13px;margin:6px 0 0" id="copyMsg" aria-live="polite"></p>
   </section>
 
   <section class="card" style="margin-bottom:22px">
@@ -238,6 +275,24 @@
   }
 
   renderDl();
+
+  // ---------- one-click copy for the setup steps ----------
+  const msg = document.getElementById('copyMsg');
+  async function copy(text, btn) {
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch {} ta.remove();
+    }
+    msg.textContent = ok ? 'Copied: ' + (text.length > 60 ? text.slice(0, 60) + '…' : text) : 'Copy failed – please select the text manually.';
+    if (btn && ok) { const old = btn.textContent; btn.classList.add('done'); btn.textContent = 'Copied ✓';
+      setTimeout(() => { btn.classList.remove('done'); btn.textContent = old; }, 1400); }
+  }
+  document.querySelectorAll('button.copy').forEach(b => b.addEventListener('click', () =>
+    copy(b.dataset.copy ?? document.getElementById(b.dataset.copyFrom).textContent.trim(), b)));
+  document.getElementById('copySkill').addEventListener('click', e =>
+    fetch('pforzheim-student-copilot/SKILL.md').then(r => r.text()).then(t => copy(t, null))
+      .catch(() => { msg.textContent = 'Could not load SKILL.md – open it with the link instead.'; }));
 })();
 </script>
 <script src="../chatbot.js"></script>
